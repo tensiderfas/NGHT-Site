@@ -54,11 +54,12 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           </span>
           
           {/* Custom tilted sharp brand lightning bolt matching our official design */}
-          <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center mt-0.5">
+          <div className="text-3xl sm:text-4xl md:text-5xl w-[0.85em] h-[0.85em] flex items-center justify-center mt-0.5">
             <Logo 
               className="w-full h-full text-[#e1222e]"
               fill="#e1222e"
               stroke="none"
+              viewBox="25 25 50 50"
             />
           </div>
           

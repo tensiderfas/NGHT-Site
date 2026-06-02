@@ -6,6 +6,7 @@ interface LogoProps {
   stroke?: string;
   strokeWidth?: number;
   animated?: boolean;
+  viewBox?: string;
 }
 
 export default function Logo({
@@ -13,11 +14,12 @@ export default function Logo({
   fill = "currentColor",
   stroke = "none",
   strokeWidth = 1.5,
-  animated = false
+  animated = false,
+  viewBox = "0 0 100 100"
 }: LogoProps) {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox={viewBox}
       className={className}
       fill={animated ? "none" : fill}
       stroke={stroke !== "none" ? stroke : "currentColor"}

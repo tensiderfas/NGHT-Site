@@ -2,7 +2,7 @@
 export const translations = {
   RU: {
     // Navigation & Common
-    philosophy: "ФИЛОСОФИЯ",
+    philosophy: "ПРИНЦИПЫ",
     services: "УСЛУГИ",
     artists: "АРТИСТЫ",
     techSpec: "О ПЛАТФОРМЕ",
@@ -25,18 +25,18 @@ export const translations = {
     labelBadge: "МУЗЫКАЛЬНЫЙ ЛЕЙБЛ И ДИСТРИБУЦИЯ",
     heroTitlePart1: "NIGHT",
     heroTitlePart2: "VOLT",
-    heroSubtitle: "NIGHTVOLT — современный музыкальный лейбл и надежный партнер для независимых артистов. Мы доставляем вашу музыку на все крупные стриминговые платформы в течение 24 часов. Вы сохраняете 100% прав на свое творчество и получаете 80% от прибыли со всех прослушиваний.",
+    heroSubtitle: "NIGHTVOLT — современный музыкальный лейбл и дистрибьютор для независимых артистов. Мы рекомендуем отправлять релиз за 14 дней до желаемой даты выхода для успешного прохождения модерации и питчинга, но при необходимости можем доставить его на площадки всего за 3 дня. Вы сохраняете 100% прав на свое творчество и получаете 80% от прибыли со всех прослушиваний.",
     royaltyDistribution: "80% ВАМ / 20% ЛЕЙБЛУ",
     royaltyDesc: "РАСПРЕДЕЛЕНИЕ ДОХОДОВ",
     supplyChannels: "ГЕОГРАФИЯ ПЛАТФОРМЫ",
     supplyDesc: "БОЛЕЕ 180 СТРАН",
     deliverySpeed: "СКОРОСТЬ РАЗМЕЩЕНИЯ",
-    deliveryDesc: "ОТ 24 ЧАСОВ",
+    deliveryDesc: "ОТ 3 ДНЕЙ",
     scrollIndicator: "ЛИСТАЙТЕ ВНИЗ",
     artistsBtn: "НАШИ АРТИСТЫ",
 
     // Philosophy Section
-    philBadge: "НАША ФИЛОСОФИЯ",
+    philBadge: "НАШИ ПРИНЦИПЫ",
     philHeading: "ПРОСТЫЕ УСЛОВИЯ ДЛЯ НЕЗАВИСИМЫХ АВТОРОВ",
     philSubtextIntro: "// ЧЕСТНАЯ СДЕЛКА",
     philSubtextDesc: "Музыкальный бизнес может казаться сложным, но у нас все просто: вы выпускаете трек, мы занимаемся его размещением и защитой авторских прав, отдавая вам 80% роялти.",
@@ -133,7 +133,7 @@ export const translations = {
   },
   EN: {
     // Navigation & Common
-    philosophy: "PHILOSOPHY",
+    philosophy: "PRINCIPLES",
     services: "SERVICES",
     artists: "ARTISTS",
     techSpec: "PLATFORM",
@@ -156,18 +156,18 @@ export const translations = {
     labelBadge: "MUSIC LABEL & DISTRIBUTION",
     heroTitlePart1: "NIGHT",
     heroTitlePart2: "VOLT",
-    heroSubtitle: "NIGHTVOLT is a modern music label and dynamic distribution partner for independent artists. We deliver your music to all major global streaming platforms in 24 hours. You keep 100% of your ownership rights and collect 80% of earnings from every stream.",
+    heroSubtitle: "NIGHTVOLT is a modern music label and distributor for independent artists. We recommend submitting your release 14 days prior to the release date for proper pitching, but if needed, we can deliver your music to platforms in just 3 days. You keep 100% of your ownership rights and collect 80% of earnings from every stream.",
     royaltyDistribution: "80% TO YOU / 20% TO LABEL",
     royaltyDesc: "ROYALTY DISTRO RULE",
     supplyChannels: "PLATFORM GEOGRAPHY",
     supplyDesc: "180+ COUNTRIES",
     deliverySpeed: "RELEASE TIMING",
-    deliveryDesc: "FROM 24 HOURS",
+    deliveryDesc: "FROM 3 DAYS",
     scrollIndicator: "SCROLL DOWN",
     artistsBtn: "OUR ROSTER",
 
     // Philosophy Section
-    philBadge: "OUR PHILOSOPHY",
+    philBadge: "OUR PRINCIPLES",
     philHeading: "SIMPLE TERMS FOR INDEPENDENT CREATORS",
     philSubtextIntro: "// FAIR DEAL",
     philSubtextDesc: "The music business might seem confusing, but we keep it beautifully clear: you submit your music, we deliver and protect it, while sharing 80% of streaming royalties with you.",

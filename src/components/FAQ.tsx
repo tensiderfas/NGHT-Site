@@ -19,8 +19,8 @@ export default function FAQ({ lang }: FAQProps) {
         ? "В какие сроки мои песни появятся на стриминговых площадках?" 
         : "How fast do my songs reach streaming platforms?",
       answer: isRu
-        ? "Благодаря прямому сотрудничеству с площадками модерация релиза занимает всего до 24 часов. Размещение ваших треков на Яндекс Музыке, ВК Музыке, Spotify и Apple Music завершается в течение суток."
-        : "Due to our direct delivery integrations, expert moderation is finished within 24 hours. Your releases go live on Spotify, Apple Music, Yandex Music, and other major streaming services within a single day."
+        ? "Мы рекомендуем отправлять релиз за 14 дней до планируемой даты выхода. Это гарантирует своевременное прохождение модерации на площадках и возможность подать трек на питчинг (промо-поддержку от редакторов). В экстренных случаях подача возможна и за 3 дня до выхода."
+        : "We recommend submitting your release 14 days prior to the planned release date. This guarantees timely moderation across platforms and enables pitching to editorial playlists for promo support. In urgent cases, submissions can be delivered in just 3 days."
     },
     {
       id: "faq-2",
