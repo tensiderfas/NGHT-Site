@@ -1,6 +1,6 @@
 {
   "name": "NIGHTVOLT",
-  "description": "Премиальный музыкальный дистрибьютор и лейбл нового поколения. Доставка музыки, умная аналитика и полная независимость для артистов.",
+  "description": "NIGHTVOLT",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

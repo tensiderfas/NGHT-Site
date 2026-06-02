@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Left Crescent Arc -->
+  <path
+    d="M 32.6,39.5 A 25.5,25.5 0 0,0 48.4,70.5 A 21.5,21.5 0 0,1 35.1,46.1 Z"
+    fill="#000000"
+  />
+  <!-- Right Crescent Arc -->
+  <path
+    d="M 67.4,60.5 A 25.5,25.5 0 0,0 51.6,29.5 A 21.5,21.5 0 0,1 64.9,53.9 Z"
+    fill="#000000"
+  />
+  <!-- Central Sharp Lightning Bolt -->
+  <polygon
+    points="31.2,27 59.3,52.5 54.1,52.5 68.8,73 40.7,47.5 45.9,47.5"
+    fill="#000000"
+  />
+</svg>
