@@ -1,0 +1,327 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-brand-black: #1e293b;
+  --color-brand-dark: #334155;
+  --color-brand-blue: #e1222e;
+  --color-brand-turquoise: #ff4d5a;
+  --color-brand-orange: #ef3340;
+  --color-brand-light: #ffffff;
+  --color-brand-muted: #7e8c9c;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-brand-light);
+    color: var(--color-brand-black);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-blue);
+    color: var(--color-brand-light);
+  }
+}
+
+/* Hide cursor on fine point devices */
+@media (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
+}
+
+/* Drag-and-drop / pointer cursor support */
+.cursor-pointer-hover {
+  transform: scale(1.6);
+  background-color: rgba(225, 34, 46, 0.08);
+  border-color: var(--color-brand-turquoise) !important;
+}
+
+/* Custom Cursor */
+.custom-cursor {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--color-brand-blue);
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s, border-color 0.25s;
+}
+
+.custom-cursor-inner {
+  width: 4px;
+  height: 4px;
+  background-color: var(--color-brand-orange);
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10000;
+}
+
+@media (pointer: coarse) {
+  .custom-cursor, .custom-cursor-inner {
+    display: none !important;
+  }
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fcfcfc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.glass-panel-dark {
+  background: rgba(30, 41, 59, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Text stroke utility */
+.text-outline-dark {
+  -webkit-text-stroke: 1.5px #1e293b;
+  color: transparent;
+}
+
+.text-outline-red {
+  -webkit-text-stroke: 2px var(--color-brand-turquoise);
+  color: transparent;
+}
+
+.text-outline-blue {
+  -webkit-text-stroke: 2px var(--color-brand-blue);
+  color: transparent;
+}
+
+.text-outline-white {
+  -webkit-text-stroke: 1.5px #ffffff;
+  color: transparent;
+}
+
+/* Subtle background architectural line patterns */
+.bg-grid-lines {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+}
+
+/* Custom drawing keyframes for logo */
+@keyframes drawStroke {
+  0% {
+    stroke-dashoffset: 1000;
+    fill: rgba(225, 34, 46, 0);
+  }
+  75% {
+    stroke-dashoffset: 0;
+    fill: rgba(225, 34, 46, 0);
+  }
+  100% {
+    stroke-dashoffset: 0;
+    fill: rgba(239, 51, 64, 1);
+  }
+}
+
+.logo-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawStroke 3.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Animated VHS Grain Noise Background Overlay - strictly pointer-events-none */
+@keyframes vhs-grain-animation {
+  0%, 100% { transform:translate(0, 0); }
+  10% { transform:translate(-0.5%, -1.5%); }
+  20% { transform:translate(-2%, 0.5%); }
+  30% { transform:translate(1.5%, -3%); }
+  45% { transform:translate(-1.5%, 2%); }
+  60% { transform:translate(2%, 0%); }
+  75% { transform:translate(0%, 2%); }
+  90% { transform:translate(-1.5%, -1.5%); }
+}
+
+/* Old television signal screen brightness flickering */
+@keyframes crt-flicker {
+  0%, 100% { opacity: 0.98; filter: brightness(1); }
+  10% { opacity: 0.93; filter: brightness(1.03); }
+  20% { opacity: 0.97; filter: brightness(0.97); }
+  30% { opacity: 0.94; filter: brightness(1.02); }
+  33% { opacity: 0.88; filter: brightness(0.92); }
+  35% { opacity: 0.96; filter: brightness(1.04); }
+  45% { opacity: 0.93; filter: brightness(0.98); }
+  55% { opacity: 0.97; filter: brightness(1); }
+  58% { opacity: 0.85; filter: brightness(0.9); }
+  60% { opacity: 0.94; filter: brightness(1.03); }
+  70% { opacity: 0.97; filter: brightness(0.97); }
+  80% { opacity: 0.91; filter: brightness(1.01); }
+  90% { opacity: 0.96; filter: brightness(0.99); }
+  95% { opacity: 0.93; filter: brightness(1.04); }
+}
+
+/* Vertical VHS tracking glitch block rolling */
+@keyframes tracking-noise-slide {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 0.2; }
+  12% { opacity: 0.05; }
+  40% { transform: translateY(100vh); opacity: 0.15; }
+  41% { opacity: 0; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+.vhs-bg-grain {
+  position: fixed;
+  top: -10%;
+  left: -10%;
+  right: -10%;
+  bottom: -10%;
+  width: 120%;
+  height: 120%;
+  /* High frequency analog TV fractal static */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='tvNoiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23tvNoiseFilter)' opacity='0.55'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  animation: vhs-grain-animation 0.05s steps(2) infinite, crt-flicker 4s infinite;
+  pointer-events: none;
+  z-index: 1; /* Under section texts */
+  opacity: 0.18; /* Pronounced but perfectly transparent television static */
+  mix-blend-mode: color-burn;
+}
+
+/* CRT and VHS CRT Scanline simulation layer */
+.vhs-bg-scanlines {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.08) 50%
+  );
+  background-size: 100% 6px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.75;
+}
+
+/* Periodic visual scanline pulse (slowly drifting tracking signal bar) */
+@keyframes tracking-drift {
+  0% {
+    transform: translateY(-120%);
+  }
+  12% {
+    transform: translateY(120vh);
+  }
+  100% {
+    transform: translateY(120vh);
+  }
+}
+
+.vhs-bg-tracking {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 35px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.05) 20%,
+    rgba(0, 0, 0, 0.12) 50%,
+    rgba(0, 0, 0, 0.05) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.04);
+  border-top: 1.5px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  z-index: 1;
+  animation: tracking-drift 8s linear infinite, tracking-noise-slide 14s infinite;
+  opacity: 0.85;
+}
+
+/* Text outline utility for glitches */
+.text-outline-orange {
+  -webkit-text-stroke: 2.5px var(--color-brand-orange);
+  color: transparent;
+}
+
+.text-outline-cyan {
+  -webkit-text-stroke: 2.5px #06b6d4;
+  color: transparent;
+}
+
+/* Jitter shake keyframe simulating intense tracking/loading delay or video signal crash */
+@keyframes vhs-jitter {
+  0% { transform: translate(0, 0) skew(0deg); }
+  10% { transform: translate(-4px, 2px) skew(-2.5deg); }
+  20% { transform: translate(4px, -2px) skew(2.5deg); }
+  35% { transform: translate(-2px, -3px) skew(-1.5deg); filter: contrast(120%); }
+  50% { transform: translate(3px, 3px) skew(3.5deg); }
+  65% { transform: translate(-3px, -1px) skew(-3deg); }
+  80% { transform: translate(5px, 1px) skew(1deg); }
+  90% { transform: translate(-4px, 4px) skew(-2deg); }
+  100% { transform: translate(0, 0) skew(0deg); }
+}
+
+.animate-vhs-shake {
+  animation: vhs-jitter 0.12s steps(2) infinite;
+}
+
+/* Dynamic slice overlays with clip-path shifts */
+@keyframes glitch-slice-1 {
+  0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  10% { clip-path: inset(14% 0 76% 0); transform: translate(-10px, -4px); }
+  30% { clip-path: inset(48% 0 42% 0); transform: translate(12px, 3px); }
+  50% { clip-path: inset(76% 0 14% 0); transform: translate(-5px, 6px); }
+  70% { clip-path: inset(28% 0 62% 0); transform: translate(8px, -8px); }
+  90% { clip-path: inset(88% 0 2% 0); transform: translate(-8px, 2px); }
+}
+
+@keyframes glitch-slice-2 {
+  0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  15% { clip-path: inset(34% 0 54% 0); transform: translate(8px, -5px); }
+  35% { clip-path: inset(2% 0 88% 0); transform: translate(-8px, 6px); }
+  55% { clip-path: inset(82% 0 8% 0); transform: translate(12px, 2px); }
+  75% { clip-path: inset(54% 0 36% 0); transform: translate(-6px, -4px); }
+  95% { clip-path: inset(20% 0 70% 0); transform: translate(6px, -3px); }
+}
+
+.animate-lag-slice-1 {
+  animation: glitch-slice-1 0.22s steps(3) infinite;
+}
+
+.animate-lag-slice-2 {
+  animation: glitch-slice-2 0.3s steps(2) infinite;
+}
+

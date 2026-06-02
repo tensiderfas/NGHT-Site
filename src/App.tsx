@@ -1,0 +1,236 @@
+import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import Preloader from './components/Preloader';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import Philosophy from './components/Philosophy';
+import Services from './components/Services';
+import Specs from './components/Specs';
+import AboutPlatform from './components/AboutPlatform';
+import AboutTeaser from './components/AboutTeaser';
+import ContractSubmission from './components/ContractSubmission';
+import MarketingSuite from './components/MarketingSuite';
+import FAQ from './components/FAQ';
+import Footer from './components/Footer';
+import DistributionTerms from './components/DistributionTerms';
+import CustomCursor from './components/CustomCursor';
+import Vacancies from './components/Vacancies';
+
+export default function App() {
+  const [siteLoaded, setSiteLoaded] = useState(false);
+  const [lang, setLang] = useState<'RU' | 'EN'>('RU');
+  const [viewTerms, setViewTerms] = useState(false);
+  const [activeLegalTab, setActiveLegalTab] = useState<'terms' | 'platform' | 'agreement' | 'privacy' | 'dmca'>('terms');
+  const [viewPromoTools, setViewPromoTools] = useState(false);
+  const [viewAbout, setViewAbout] = useState(false);
+  const [viewVacancies, setViewVacancies] = useState(false);
+
+  const handleNavigateToTerms = (tab: 'terms' | 'platform' | 'agreement' | 'privacy' | 'dmca' = 'terms') => {
+    setActiveLegalTab(tab);
+    setViewTerms(true);
+    setViewPromoTools(false);
+    setViewAbout(false);
+    setViewVacancies(false);
+  };
+
+  const handleNavigateToPromo = () => {
+    setViewPromoTools(true);
+    setViewTerms(false);
+    setViewAbout(false);
+    setViewVacancies(false);
+  };
+
+  const handleNavigateToAbout = () => {
+    setViewAbout(true);
+    setViewTerms(false);
+    setViewPromoTools(false);
+    setViewVacancies(false);
+  };
+
+  const handleNavigateToVacancies = () => {
+    setViewVacancies(true);
+    setViewTerms(false);
+    setViewPromoTools(false);
+    setViewAbout(false);
+  };
+
+  // Global smooth navigation scroll assistance
+  const handleScrollTo = (selector: string) => {
+    if (viewTerms || viewPromoTools || viewAbout || viewVacancies) {
+      setViewTerms(false);
+      setViewPromoTools(false);
+      setViewAbout(false);
+      setViewVacancies(false);
+      // Wait minor duration for component unmount/mount to complete, then slide
+      setTimeout(() => {
+        const targetElement = document.querySelector(selector);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+      return;
+    }
+
+    const targetElement = document.querySelector(selector);
+    if (targetElement) {
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
+  const handleToggleLang = () => {
+    setLang((prev) => (prev === 'RU' ? 'EN' : 'RU'));
+  };
+
+  // Auto scroll to top when changing sub-views or active tab
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies]);
+
+  return (
+    <div id="site-root-container" className="min-h-screen bg-[#fafafc] relative overflow-x-hidden selection:bg-brand-blue selection:text-white">
+      
+      {/* VHS Background Noise & Scanline simulation overlays */}
+      <div className="vhs-bg-grain" />
+      <div className="vhs-bg-scanlines" />
+      <div className="vhs-bg-tracking" />
+
+      {/* 0. Custom Circular Tracking Cursor Option */}
+      <CustomCursor />
+
+      {/* 1. Page Preloader */}
+      <AnimatePresence mode="wait">
+        {!siteLoaded && (
+          <Preloader key="app-preloader" onComplete={() => setSiteLoaded(true)} />
+        )}
+      </AnimatePresence>
+
+      {/* 2. Main Site content */}
+      <AnimatePresence mode="sync">
+        {siteLoaded && (
+          <motion.div
+            key="main-portal-content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="flex flex-col relative z-10"
+          >
+            {/* Unique Navbar with Localized toggles and Direct Legal Links */}
+            <Navbar 
+              lang={lang} 
+              onToggleLang={handleToggleLang} 
+              onScrollTo={handleScrollTo} 
+              onNavigateToTerms={handleNavigateToTerms}
+              onNavigateToPromo={handleNavigateToPromo}
+              onNavigateToAbout={handleNavigateToAbout}
+              onNavigateToVacancies={handleNavigateToVacancies}
+            />
+
+            {/* Structured Page Content routing */}
+            <main className="flex-grow pt-[1px]">
+              <AnimatePresence mode="wait">
+                {viewTerms ? (
+                  <motion.div
+                    key="terms-subpage"
+                    initial={{ opacity: 0, scale: 0.99, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: -20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <DistributionTerms 
+                      lang={lang} 
+                      onBack={() => setViewTerms(false)} 
+                      initialTab={activeLegalTab}
+                    />
+                  </motion.div>
+                ) : viewPromoTools ? (
+                  <motion.div
+                    key="promo-subpage"
+                    initial={{ opacity: 0, scale: 0.99, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: -20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <MarketingSuite 
+                      lang={lang} 
+                      onBack={() => setViewPromoTools(false)} 
+                    />
+                  </motion.div>
+                ) : viewAbout ? (
+                  <motion.div
+                    key="about-subpage"
+                    initial={{ opacity: 0, scale: 0.99, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: -20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <AboutPlatform 
+                      lang={lang} 
+                      onBack={() => setViewAbout(false)} 
+                    />
+                  </motion.div>
+                ) : viewVacancies ? (
+                  <motion.div
+                    key="vacancies-subpage"
+                    initial={{ opacity: 0, scale: 0.99, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: -20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <Vacancies 
+                      lang={lang} 
+                      onBack={() => setViewVacancies(false)} 
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="home-mainpage"
+                    initial={{ opacity: 0, scale: 0.99, x: -20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: 20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {/* Hero visual panel with spark glitches */}
+                    <Hero lang={lang} onScrollTo={handleScrollTo} />
+                    
+                    {/* Philosophy splits and 80/20 values */}
+                    <Philosophy lang={lang} />
+                    
+                    {/* Expanded 5-card Services and detail grid */}
+                    <Services lang={lang} />
+                    
+                    {/* Operational system technical specs */}
+                    <Specs lang={lang} />
+                    
+                    {/* Immersive Biography, Foundations and Team Board Teaser Grid */}
+                    <AboutTeaser lang={lang} onReadFull={handleNavigateToAbout} />
+                    
+                    {/* Secure embed portal for Intake demo submissions */}
+                    <ContractSubmission lang={lang} />
+                    
+                    {/* Localized FAQ accordion lists */}
+                    <FAQ lang={lang} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </main>
+
+            {/* Consistent legal and external reference Footer card */}
+            <Footer 
+              lang={lang} 
+              onScrollTo={handleScrollTo} 
+              onNavigateToTerms={handleNavigateToTerms} 
+              onNavigateToPromo={handleNavigateToPromo}
+              onNavigateToAbout={handleNavigateToAbout}
+              onNavigateToVacancies={handleNavigateToVacancies}
+            />
+
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    </div>
+  );
+}
