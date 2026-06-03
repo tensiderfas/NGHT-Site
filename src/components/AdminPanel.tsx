@@ -67,14 +67,18 @@ interface Submission {
   activeJobTitleRu?: string;
 }
 
-const AUTHORIZED_EMAIL = 'ggg274415@gmail.com';
+const AUTHORIZED_EMAILS = ['ggg274415@gmail.com', 'kajdaila17@gmail.com'];
+const isAuthorizedEmail = (email: string | null | undefined): boolean => {
+  if (!email) return false;
+  return AUTHORIZED_EMAILS.includes(email.toLowerCase().trim());
+};
 
 export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const isRu = lang === 'RU';
   
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
-  const [authError, setAuthError] = useState<string>('');
+  const [authError, setAuthError] = useState<React.ReactNode | string>('');
   const [authSuccessMsg, setAuthSuccessMsg] = useState<string>('');
   
   // Alternative Email/Password admin login states
@@ -84,7 +88,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const [emailAuthLoading, setEmailAuthLoading] = useState(false);
 
   // Link/Update admin password states
-  const [passwordSetupStatus, setPasswordSetupStatus] = useState<{ success?: boolean; msg?: string } | null>(null);
+  const [passwordSetupStatus, setPasswordSetupStatus] = useState<{ success?: boolean; msg?: React.ReactNode | string } | null>(null);
   const [settingUpPassword, setSettingUpPassword] = useState(false);
   
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -173,7 +177,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       setLoadingAuth(false);
       
       if (user) {
-        if (user.email === AUTHORIZED_EMAIL) {
+        if (isAuthorizedEmail(user.email)) {
           setAuthError('');
           fetchSubmissions();
           fetchPartners();
@@ -317,30 +321,65 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
     } catch (err: any) {
       console.error('Email password login error:', err);
-      let message = isRu
-        ? 'Не удалось войти по e-mail. Убедитесь, что логин и пароль администратора верны.'
-        : 'Failed signing in with Email. Double check credentials and console setup.';
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        message = isRu
-          ? 'Неверный e-mail или пароль администратора.'
-          : 'Invalid admin e-mail or password.';
-      } else if (err.code === 'auth/user-disabled') {
-        message = isRu ? 'Учетная запись администратора отключена.' : 'Admin account has been disabled.';
+      const friendlyErr = getFirebaseFriendlyErrorMessage(err);
+      if (friendlyErr) {
+        setAuthError(friendlyErr);
+      } else {
+        let message = isRu
+          ? 'Не удалось войти по e-mail. Убедитесь, что логин и пароль администратора верны.'
+          : 'Failed signing in with Email. Double check credentials and console setup.';
+        if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+          message = isRu
+            ? 'Неверный e-mail или пароль администратора.'
+            : 'Invalid admin e-mail or password.';
+        } else if (err.code === 'auth/user-disabled') {
+          message = isRu ? 'Учетная запись администратора отключена.' : 'Admin account has been disabled.';
+        }
+        setAuthError(message);
       }
-      setAuthError(message);
     } finally {
       setEmailAuthLoading(false);
     }
+  };
+
+  const getFirebaseFriendlyErrorMessage = (err: any) => {
+    if (err && (err.code === 'auth/operation-not-allowed' || String(err).includes('operation-not-allowed'))) {
+      return (
+        <div className="space-y-3 mt-1 text-neutral-800 leading-normal">
+          <p className="font-bold text-rose-600">
+            {isRu 
+              ? '⚠️ Метод авторизации по паролю заблокирован платформой!'
+              : '⚠️ Email/Password login is locked by the sandbox platform!'}
+          </p>
+          <p className="font-light text-[12px]">
+            {isRu
+              ? 'Так как это автоматический контейнер AI Studio, у вас нет прав Owner в консоли Google Cloud / Firebase (вы видите ошибку "To manage settings, ask a project owner..."), поэтому включить обычный вход по паролю технически невозможно.'
+              : 'Since this is a managed AI Studio container, you do not have GCP Project Owner permissions inside the Firebase Console (which is why you see "To manage settings, ask a project owner..."). Thus, custom Email/Password login cannot be enabled.'}
+          </p>
+          <div className="p-3 bg-brand-orange/5 border border-brand-orange/20 rounded-xl space-y-1.5 mt-2">
+            <p className="font-bold text-xs text-brand-orange">
+              {isRu ? '💡 РЕШЕНИЕ: Вход в один клик без пароля!' : '💡 SOLUTION: One-click secure login!'}
+            </p>
+            <p className="font-light text-[11px] text-neutral-600">
+              {isRu
+                ? `Вам вообще НЕ нужен пароль! Ваша почта уже занесена в список доверенных администраторов. Просто нажмите кнопку «Назад» и используйте большую красную кнопку «ВОЙТИ ЧЕРЕЗ GOOGLE» для мгновенного входа.`
+                : `You do NOT need a password! Your email is already added to the trusted administrators. Just click "Back" and use the main red "SIGN IN WITH GOOGLE" button for instant access.`}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   const handleRegisterAdminWithPassword = async () => {
     setAuthError('');
     setAuthSuccessMsg('');
     
-    if (emailInput.trim() !== AUTHORIZED_EMAIL) {
+    if (!isAuthorizedEmail(emailInput)) {
       setAuthError(isRu 
-        ? 'Регистрация разрешена только для официальной почты администратора: ' + AUTHORIZED_EMAIL
-        : 'Registration is exclusively allowed for the official admin email: ' + AUTHORIZED_EMAIL
+        ? 'Регистрация разрешена только для официальной почты администратора: ' + AUTHORIZED_EMAILS.join(', ')
+        : 'Registration is exclusively allowed for the official admin email: ' + AUTHORIZED_EMAILS.join(', ')
       );
       return;
     }
@@ -362,7 +401,10 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       );
     } catch (err: any) {
       console.error('Registration error:', err);
-      if (err.code === 'auth/email-already-in-use') {
+      const friendlyErr = getFirebaseFriendlyErrorMessage(err);
+      if (friendlyErr) {
+        setAuthError(friendlyErr);
+      } else if (err.code === 'auth/email-already-in-use') {
         setAuthError(isRu
           ? 'Данная почта уже используется. Войдите под своим текущим паролем или нажмите на кнопку ниже для сброса/установки нового пароля.'
           : 'This email is already in use. Please sign in with your password or use the reset/setup button below.'
@@ -379,10 +421,10 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setAuthError('');
     setAuthSuccessMsg('');
     
-    if (emailInput.trim() !== AUTHORIZED_EMAIL) {
+    if (!isAuthorizedEmail(emailInput)) {
       setAuthError(isRu 
-        ? 'Сброс пароля доступен только для официальной почты администратора: ' + AUTHORIZED_EMAIL
-        : 'Password reset is only allowed for the official admin email: ' + AUTHORIZED_EMAIL
+        ? 'Сброс пароля доступен только для официальной почты администратора: ' + AUTHORIZED_EMAILS.join(', ')
+        : 'Password reset is only allowed for the official admin email: ' + AUTHORIZED_EMAILS.join(', ')
       );
       return;
     }
@@ -396,10 +438,15 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       );
     } catch (err: any) {
       console.error('Password reset error:', err);
-      setAuthError(isRu
-        ? 'Не удалось отправить письмо со ссылкой. Убедитесь, что e-mail/провайдер настроен.'
-        : 'Failed sending password reset. Please verify setup.'
-      );
+      const friendlyErr = getFirebaseFriendlyErrorMessage(err);
+      if (friendlyErr) {
+        setAuthError(friendlyErr);
+      } else {
+        setAuthError(isRu
+          ? 'Не удалось отправить письмо со ссылкой. Убедитесь, что e-mail/провайдер настроен.'
+          : 'Failed sending password reset. Please verify setup.'
+        );
+      }
     } finally {
       setEmailAuthLoading(false);
     }
@@ -419,12 +466,12 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setPasswordSetupStatus(null);
     setSettingUpPassword(true);
     try {
-      const email = AUTHORIZED_EMAIL;
-      const targetPassword = "NIGHTVOLT-ADMIN-ROOT2026";
-      
       if (!auth.currentUser) {
         throw new Error(isRu ? "Пользователь не авторизован" : "No active authenticated session.");
       }
+      
+      const email = auth.currentUser.email || AUTHORIZED_EMAILS[0];
+      const targetPassword = "NIGHTVOLT-ADMIN-ROOT2026";
 
       const { EmailAuthProvider, linkWithCredential, updatePassword } = await import("firebase/auth");
       const credential = EmailAuthProvider.credential(email, targetPassword);
@@ -434,8 +481,8 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
         setPasswordSetupStatus({
           success: true,
           msg: isRu
-            ? `Учетная запись успешно привязана! Теперь вы можете заходить по почте ggg274415@gmail.com с паролем: NIGHTVOLT-ADMIN-ROOT2026`
-            : `Account successfully linked! You can now log in via email ggg274415@gmail.com with password: NIGHTVOLT-ADMIN-ROOT2026`
+            ? `Учетная запись успешно привязана! Теперь вы можете заходить по почте ${email} с паролем: NIGHTVOLT-ADMIN-ROOT2026`
+            : `Account successfully linked! You can now log in via email ${email} with password: NIGHTVOLT-ADMIN-ROOT2026`
         });
       } catch (err: any) {
         console.log("Link attempt result:", err);
@@ -454,11 +501,12 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       }
     } catch (err: any) {
       console.error("Setting password failed:", err);
+      const friendlyErr = getFirebaseFriendlyErrorMessage(err);
       setPasswordSetupStatus({
         success: false,
-        msg: isRu
+        msg: friendlyErr || (isRu
           ? `Ошибка настройки пароля: ${err?.message || "Провайдер заблокирован"}`
-          : `Failed setting/updating password: ${err?.message || "Provider error"}`
+          : `Failed setting/updating password: ${err?.message || "Provider error"}`)
       });
     } finally {
       setSettingUpPassword(false);
@@ -520,7 +568,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
-  const isAuthorized = currentUser && currentUser.email === AUTHORIZED_EMAIL;
+  const isAuthorized = currentUser && isAuthorizedEmail(currentUser.email);
 
   return (
     <div className="min-h-screen bg-[#fafafc] pt-24 pb-32 px-6 md:px-12 relative block font-sans">
@@ -763,7 +811,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                     <span>Быстрый вход по паролю / Email password configuration</span>
                   </div>
                   <h3 className="text-base font-bold text-neutral-900 tracking-tight">
-                    {isRu ? "Прямой доступ по паролю для ggg274415@gmail.com" : "Direct Password Access for ggg274415@gmail.com"}
+                    {isRu ? `Прямой доступ по паролю для ${currentUser?.email || ''}` : `Direct Password Access for ${currentUser?.email || ''}`}
                   </h3>
                   <p className="text-xs text-neutral-400 font-light leading-relaxed">
                     {isRu 
