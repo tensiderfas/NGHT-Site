@@ -25,28 +25,8 @@ import {
   Calendar,
   X
 } from 'lucide-react';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  getDocs, 
-  getDoc,
-  deleteDoc,
-  doc,
-  setDoc,
-  serverTimestamp,
-  Timestamp 
-} from 'firebase/firestore';
-import { 
-  signInWithPopup, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
-  signOut, 
-  onAuthStateChanged, 
-  User as FirebaseUser 
-} from 'firebase/auth';
-import { db, auth, googleProvider, handleFirestoreError, OperationType } from '../firebase';
+// Customized for REST API Auth Proxying
+import { Timestamp } from 'firebase/firestore';
 
 interface AdminPanelProps {
   lang: 'RU' | 'EN';
@@ -76,20 +56,15 @@ const isAuthorizedEmail = (email: string | null | undefined): boolean => {
 export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const isRu = lang === 'RU';
   
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [adminUser, setAdminUser] = useState<{ email: string } | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
-  const [authError, setAuthError] = useState<React.ReactNode | string>('');
+  const [authError, setAuthError] = useState<string>('');
   const [authSuccessMsg, setAuthSuccessMsg] = useState<string>('');
   
   // Alternative Email/Password admin login states
-  const [useEmailAuth, setUseEmailAuth] = useState(false);
   const [emailInput, setEmailInput] = useState('ggg274415@gmail.com');
   const [passwordInput, setPasswordInput] = useState('');
   const [emailAuthLoading, setEmailAuthLoading] = useState(false);
-
-  // Link/Update admin password states
-  const [passwordSetupStatus, setPasswordSetupStatus] = useState<{ success?: boolean; msg?: React.ReactNode | string } | null>(null);
-  const [settingUpPassword, setSettingUpPassword] = useState(false);
   
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingData, setLoadingData] = useState(false);
@@ -170,44 +145,55 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const [partnerSubmitting, setPartnerSubmitting] = useState(false);
   const [partnerMsg, setPartnerMsg] = useState('');
 
-  // Monitor Auth Changes
+  // Check custom token on mount
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setLoadingAuth(false);
-      
-      if (user) {
-        if (isAuthorizedEmail(user.email)) {
-          setAuthError('');
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      fetch('/api/admin/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) {
+          setAdminUser({ email: data.email });
           fetchSubmissions();
           fetchPartners();
         } else {
-          setAuthError(
-            isRu 
-              ? `Доступ заблокирован: ваш аккаунт ${user.email} не авторизован.` 
-              : `Access Denied: your account ${user.email} is not authorized.`
-          );
-          // Auto sign out unauthorized users
-          signOut(auth);
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_email');
+          setAdminUser(null);
         }
-      }
-    });
+        setLoadingAuth(false);
+      })
+      .catch(() => {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_email');
+        setAdminUser(null);
+        setLoadingAuth(false);
+      });
+    } else {
+      setLoadingAuth(false);
+    }
+  }, []);
 
-    return () => unsubscribe();
-  }, [isRu]);
-
-  // Fetch Submissions from Firestore
+  // Fetch Submissions from Custom API
   const fetchSubmissions = async () => {
     setLoadingData(true);
     setDataError('');
     try {
-      const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const docsList: Submission[] = [];
-      querySnapshot.forEach((docSnapshot) => {
-        docsList.push({ id: docSnapshot.id, ...docSnapshot.data() } as Submission);
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch('/api/admin/submissions', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
-      setSubmissions(docsList);
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+      const data = await response.json();
+      setSubmissions(data);
     } catch (err) {
       console.error('Error fetching submissions from cloud database:', err);
       setDataError(
@@ -224,13 +210,12 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const fetchPartners = async () => {
     setLoadingPartners(true);
     try {
-      const q = query(collection(db, 'partners'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const docsList: any[] = [];
-      querySnapshot.forEach((docSnapshot) => {
-        docsList.push({ id: docSnapshot.id, ...docSnapshot.data() });
-      });
-      setPartners(docsList);
+      const response = await fetch('/api/admin/partners');
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+      const data = await response.json();
+      setPartners(data);
     } catch (err) {
       console.error('Error fetching partners from backend:', err);
     } finally {
@@ -249,19 +234,20 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setPartnerSubmitting(true);
     setPartnerMsg('');
     try {
-      const newDocRef = doc(collection(db, 'partners'));
-      const payload = {
-        id: newDocRef.id,
-        createdAt: serverTimestamp(),
-        name: partnerForm.name.trim(),
-        descriptionRu: partnerForm.descriptionRu.trim(),
-        descriptionEn: partnerForm.descriptionEn.trim(),
-        websiteUrl: partnerForm.websiteUrl.trim() || '',
-        logoSvg: partnerForm.logoSvg.trim() || '',
-        logoUrl: partnerForm.logoUrl.trim() || ''
-      };
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch('/api/admin/partners', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(partnerForm)
+      });
 
-      await setDoc(newDocRef, payload);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed saving partner');
+      }
 
       setPartnerForm({
         name: '',
@@ -274,9 +260,9 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       setUploadedLogoName('');
       setPartnerMsg(isRu ? 'Партнер успешно зарегистрирован!' : 'Partner successfully registered!');
       fetchPartners();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating partner document:', err);
-      setPartnerMsg(isRu ? 'Ошибка при добавлении в базу данных.' : 'Failed saving to Cloud Firestore.');
+      setPartnerMsg(isRu ? `Ошибка при добавлении в базу данных: ${err.message}` : `Failed saving to Cloud Firestore: ${err.message}`);
     } finally {
       setPartnerSubmitting(false);
     }
@@ -290,25 +276,22 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
 
     try {
-      await deleteDoc(doc(db, 'partners', id));
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`/api/admin/partners/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('API delete failed');
+      }
+      
       setPartners(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Error deleting partner document:', err);
       alert(isRu ? 'Не удалось удалить запись' : 'Failed to delete record');
-    }
-  };
-
-  const handleLogin = async () => {
-    setAuthError('');
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err: any) {
-      console.error('OAuth error during admin authorization:', err);
-      setAuthError(
-        isRu 
-          ? 'Ошибка авторизации. Попробуйте войти снова.' 
-          : 'Authorization failed. Please try again.'
-      );
     }
   };
 
@@ -318,72 +301,44 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setAuthSuccessMsg('');
     setEmailAuthLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: emailInput.trim(),
+          password: passwordInput
+        })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      localStorage.setItem('admin_token', data.token);
+      localStorage.setItem('admin_email', data.email);
+      setAdminUser({ email: data.email });
+      setAuthSuccessMsg(isRu ? 'Успешный вход в пульт управления!' : 'Successfully signed in safely!');
+      
+      // Load tables
+      fetchSubmissions();
+      fetchPartners();
     } catch (err: any) {
       console.error('Email password login error:', err);
-      const friendlyErr = getFirebaseFriendlyErrorMessage(err);
-      if (friendlyErr) {
-        setAuthError(friendlyErr);
-      } else {
-        let message = isRu
-          ? 'Не удалось войти по e-mail. Убедитесь, что логин и пароль администратора верны.'
-          : 'Failed signing in with Email. Double check credentials and console setup.';
-        if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-          message = isRu
-            ? 'Неверный e-mail или пароль администратора.'
-            : 'Invalid admin e-mail or password.';
-        } else if (err.code === 'auth/user-disabled') {
-          message = isRu ? 'Учетная запись администратора отключена.' : 'Admin account has been disabled.';
-        }
-        setAuthError(message);
-      }
+      setAuthError(err.message || (isRu 
+        ? 'Неверный e-mail или пароль администратора.' 
+        : 'Invalid admin credentials or database error.'));
     } finally {
       setEmailAuthLoading(false);
     }
-  };
-
-  const getFirebaseFriendlyErrorMessage = (err: any) => {
-    if (err && (err.code === 'auth/operation-not-allowed' || String(err).includes('operation-not-allowed'))) {
-      return (
-        <div className="space-y-3 mt-1 text-neutral-800 leading-normal">
-          <p className="font-bold text-rose-600">
-            {isRu 
-              ? '⚠️ Метод авторизации по паролю заблокирован платформой!'
-              : '⚠️ Email/Password login is locked by the sandbox platform!'}
-          </p>
-          <p className="font-light text-[12px]">
-            {isRu
-              ? 'Так как это автоматический контейнер AI Studio, у вас нет прав Owner в консоли Google Cloud / Firebase (вы видите ошибку "To manage settings, ask a project owner..."), поэтому включить обычный вход по паролю технически невозможно.'
-              : 'Since this is a managed AI Studio container, you do not have GCP Project Owner permissions inside the Firebase Console (which is why you see "To manage settings, ask a project owner..."). Thus, custom Email/Password login cannot be enabled.'}
-          </p>
-          <div className="p-3 bg-brand-orange/5 border border-brand-orange/20 rounded-xl space-y-1.5 mt-2">
-            <p className="font-bold text-xs text-brand-orange">
-              {isRu ? '💡 РЕШЕНИЕ: Вход в один клик без пароля!' : '💡 SOLUTION: One-click secure login!'}
-            </p>
-            <p className="font-light text-[11px] text-neutral-600">
-              {isRu
-                ? `Вам вообще НЕ нужен пароль! Ваша почта уже занесена в список доверенных администраторов. Просто нажмите кнопку «Назад» и используйте большую красную кнопку «ВОЙТИ ЧЕРЕЗ GOOGLE» для мгновенного входа.`
-                : `You do NOT need a password! Your email is already added to the trusted administrators. Just click "Back" and use the main red "SIGN IN WITH GOOGLE" button for instant access.`}
-            </p>
-          </div>
-        </div>
-      );
-    }
-    return null;
   };
 
   const handleRegisterAdminWithPassword = async () => {
     setAuthError('');
     setAuthSuccessMsg('');
     
-    if (!isAuthorizedEmail(emailInput)) {
-      setAuthError(isRu 
-        ? 'Регистрация разрешена только для официальной почты администратора: ' + AUTHORIZED_EMAILS.join(', ')
-        : 'Registration is exclusively allowed for the official admin email: ' + AUTHORIZED_EMAILS.join(', ')
-      );
-      return;
-    }
-
     if (passwordInput.length < 6) {
       setAuthError(isRu
         ? 'Пароль должен содержать минимум 6 символов.'
@@ -394,59 +349,29 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
 
     setEmailAuthLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+      const response = await fetch('/api/admin/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: emailInput.trim(),
+          password: passwordInput
+        })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+      
       setAuthSuccessMsg(isRu
-        ? 'Учетная запись успешно создана и привязана! Вы вошли как администратор.'
-        : 'Admin account successfully created and bound! You are logged in.'
+        ? 'Учетная запись создана! Введите ваш логин/пароль повторно и нажмите кнопку ВОЙТИ.'
+        : 'Account created! Enter your credentials again and click LOGIN.'
       );
     } catch (err: any) {
       console.error('Registration error:', err);
-      const friendlyErr = getFirebaseFriendlyErrorMessage(err);
-      if (friendlyErr) {
-        setAuthError(friendlyErr);
-      } else if (err.code === 'auth/email-already-in-use') {
-        setAuthError(isRu
-          ? 'Данная почта уже используется. Войдите под своим текущим паролем или нажмите на кнопку ниже для сброса/установки нового пароля.'
-          : 'This email is already in use. Please sign in with your password or use the reset/setup button below.'
-        );
-      } else {
-        setAuthError(err?.message || String(err));
-      }
-    } finally {
-      setEmailAuthLoading(false);
-    }
-  };
-
-  const handleSendPasswordReset = async () => {
-    setAuthError('');
-    setAuthSuccessMsg('');
-    
-    if (!isAuthorizedEmail(emailInput)) {
-      setAuthError(isRu 
-        ? 'Сброс пароля доступен только для официальной почты администратора: ' + AUTHORIZED_EMAILS.join(', ')
-        : 'Password reset is only allowed for the official admin email: ' + AUTHORIZED_EMAILS.join(', ')
-      );
-      return;
-    }
-
-    setEmailAuthLoading(true);
-    try {
-      await sendPasswordResetEmail(auth, emailInput.trim());
-      setAuthSuccessMsg(isRu
-        ? 'Ссылка для создания/сброса пароля отправлена на вашу почту! Проверьте входящие или папку Спам.'
-        : 'Password setup link has been sent to your email! Please check your inbox or Spam folder.'
-      );
-    } catch (err: any) {
-      console.error('Password reset error:', err);
-      const friendlyErr = getFirebaseFriendlyErrorMessage(err);
-      if (friendlyErr) {
-        setAuthError(friendlyErr);
-      } else {
-        setAuthError(isRu
-          ? 'Не удалось отправить письмо со ссылкой. Убедитесь, что e-mail/провайдер настроен.'
-          : 'Failed sending password reset. Please verify setup.'
-        );
-      }
+      setAuthError(err.message || String(err));
     } finally {
       setEmailAuthLoading(false);
     }
@@ -454,62 +379,21 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      setSubmissions([]);
-      setSelectedSubmission(null);
+      const token = localStorage.getItem('admin_token');
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).catch(() => {});
     } catch (err) {
       console.error('Logout error:', err);
-    }
-  };
-
-  const handleLinkOrUpdatePassword = async () => {
-    setPasswordSetupStatus(null);
-    setSettingUpPassword(true);
-    try {
-      if (!auth.currentUser) {
-        throw new Error(isRu ? "Пользователь не авторизован" : "No active authenticated session.");
-      }
-      
-      const email = auth.currentUser.email || AUTHORIZED_EMAILS[0];
-      const targetPassword = "NIGHTVOLT-ADMIN-ROOT2026";
-
-      const { EmailAuthProvider, linkWithCredential, updatePassword } = await import("firebase/auth");
-      const credential = EmailAuthProvider.credential(email, targetPassword);
-      
-      try {
-        await linkWithCredential(auth.currentUser, credential);
-        setPasswordSetupStatus({
-          success: true,
-          msg: isRu
-            ? `Учетная запись успешно привязана! Теперь вы можете заходить по почте ${email} с паролем: NIGHTVOLT-ADMIN-ROOT2026`
-            : `Account successfully linked! You can now log in via email ${email} with password: NIGHTVOLT-ADMIN-ROOT2026`
-        });
-      } catch (err: any) {
-        console.log("Link attempt result:", err);
-        if (err.code === "auth/provider-already-linked" || err.code === "auth/credential-already-in-use" || err.code === "auth/email-already-in-use") {
-          // If already linked or already registered as email/password, update password directly
-          await updatePassword(auth.currentUser, targetPassword);
-          setPasswordSetupStatus({
-            success: true,
-            msg: isRu
-              ? `Пароль для входа по email изменен на: NIGHTVOLT-ADMIN-ROOT2026`
-              : `Email password successfully updated to: NIGHTVOLT-ADMIN-ROOT2026`
-          });
-        } else {
-          throw err;
-        }
-      }
-    } catch (err: any) {
-      console.error("Setting password failed:", err);
-      const friendlyErr = getFirebaseFriendlyErrorMessage(err);
-      setPasswordSetupStatus({
-        success: false,
-        msg: friendlyErr || (isRu
-          ? `Ошибка настройки пароля: ${err?.message || "Провайдер заблокирован"}`
-          : `Failed setting/updating password: ${err?.message || "Provider error"}`)
-      });
     } finally {
-      setSettingUpPassword(false);
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_email');
+      setAdminUser(null);
+      setSubmissions([]);
+      setSelectedSubmission(null);
     }
   };
 
@@ -520,7 +404,18 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
     
     try {
-      await deleteDoc(doc(db, 'submissions', id));
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`/api/admin/submissions/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('API failed deleting submission');
+      }
+      
       setSubmissions(prev => prev.filter(sub => sub.id !== id));
       if (selectedSubmission?.id === id) {
         setSelectedSubmission(null);
@@ -568,7 +463,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
-  const isAuthorized = currentUser && isAuthorizedEmail(currentUser.email);
+  const isAuthorized = !!adminUser;
 
   return (
     <div className="min-h-screen bg-[#fafafc] pt-24 pb-32 px-6 md:px-12 relative block font-sans">
@@ -641,100 +536,61 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                {!useEmailAuth ? (
-                  <div className="space-y-4">
-                    <button
-                      onClick={handleLogin}
-                      className="w-full flex items-center justify-center gap-3 py-3 bg-[#e1222e] hover:bg-neutral-950 border border-[#e1222e] hover:border-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all duration-300 shadow-sm cursor-pointer active:scale-95"
-                    >
-                      <LogIn className="w-4 h-4" />
-                      <span>{isRu ? "ВОЙТИ ЧЕРЕЗ GOOGLE" : "OAUTH GOOGLE AUTH"}</span>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => setUseEmailAuth(true)}
-                      className="text-xs text-neutral-400 hover:text-brand-orange transition-colors font-mono tracking-wide underline bg-transparent border-none cursor-pointer"
-                    >
-                      {isRu ? "Войти или настроить пароль" : "Sign in / Setup with password"}
-                    </button>
+                <form onSubmit={handleEmailPasswordLogin} className="space-y-4 text-left">
+                  <div className="space-y-1.5">
+                    <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block select-none">
+                      {isRu ? "E-mail Администратора *" : "Admin Email *"}
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all font-mono"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                    />
                   </div>
-                ) : (
-                  <form onSubmit={handleEmailPasswordLogin} className="space-y-4 text-left">
-                    <div className="space-y-1.5">
-                      <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block select-none">
-                        {isRu ? "E-mail Администратора *" : "Admin Email *"}
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all font-mono"
-                        value={emailInput}
-                        onChange={(e) => setEmailInput(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-1.5">
-                      <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block select-none">
-                        {isRu ? "Пароль *" : "Password *"}
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all font-mono"
-                        value={passwordInput}
-                        onChange={(e) => setPasswordInput(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col gap-2 pt-2">
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setUseEmailAuth(false)}
-                          className="flex-1 py-2.5 border border-neutral-200 hover:bg-neutral-50 text-neutral-600 rounded-xl text-xs font-mono font-bold tracking-wide transition-all uppercase cursor-pointer select-none"
-                        >
-                          {isRu ? "Назад" : "Back"}
-                        </button>
-                        
-                        <button
-                          type="submit"
-                          disabled={emailAuthLoading}
-                          className="flex-1 py-2.5 bg-[#e1222e] hover:bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wide transition-all uppercase cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 select-none font-bold"
-                        >
-                          {emailAuthLoading ? (
-                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <LogIn className="w-3.5 h-3.5" />
-                          )}
-                          <span>{isRu ? "ВОЙТИ" : "LOGIN"}</span>
-                        </button>
-                      </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block select-none">
+                      {isRu ? "Пароль *" : "Password *"}
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all font-mono"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-2 pt-2">
+                    <button
+                      type="submit"
+                      disabled={emailAuthLoading}
+                      className="w-full py-2.5 bg-[#e1222e] hover:bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wide transition-all uppercase cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 select-none font-bold"
+                    >
+                      {emailAuthLoading ? (
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <LogIn className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isRu ? "ВОЙТИ В СИСТЕМУ" : "LOG IN"}</span>
+                    </button>
 
-                      <div className="border-t border-neutral-100 mt-4 pt-4 space-y-3">
-                        <button
-                          type="button"
-                          disabled={emailAuthLoading}
-                          onClick={handleRegisterAdminWithPassword}
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white border-none rounded-xl text-xs font-mono font-bold tracking-wide transition-all uppercase cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 select-none"
-                        >
-                          <ShieldCheck className="w-3.5 h-3.5 animate-pulse" />
-                          <span>{isRu ? "СОЗДАТЬ/ЗАРЕГИСТРИРОВАТЬ ПАРОЛЬ" : "REGISTER / CREATE PASSWORD"}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={emailAuthLoading}
-                          onClick={handleSendPasswordReset}
-                          className="w-full text-center py-1.5 text-[11px] text-neutral-400 hover:text-brand-orange transition-colors font-mono tracking-wide underline bg-transparent border-none cursor-pointer"
-                        >
-                          {isRu ? "Сбросить/Установить пароль по e-mail ссылке" : "Setup / Reset password via email link"}
-                        </button>
-                      </div>
+                    <div className="border-t border-neutral-100 mt-4 pt-4">
+                      <button
+                        type="button"
+                        disabled={emailAuthLoading}
+                        onClick={handleRegisterAdminWithPassword}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white border-none rounded-xl text-xs font-mono font-bold tracking-wide transition-all uppercase cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 select-none"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 animate-pulse" />
+                        <span>{isRu ? "ЗАРЕГИСТРИРОВАТЬ АДМИНА" : "REGISTER / SIGN UP"}</span>
+                      </button>
                     </div>
-                  </form>
-                )}
+                  </div>
+                </form>
               </div>
             )}
 
@@ -758,7 +614,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                   {activeTab === 'candidates' ? (isRu ? "БАЗА КАНДИДАТОВ" : "CANDIDATES DATABASE") : (isRu ? "ПАРТНЕРСКАЯ СЕТЬ" : "PARTNERS NETWORK")}
                 </h1>
                 <p className="text-xs font-mono text-neutral-400 uppercase tracking-wider mt-1">
-                  CURRENT USER: <span className="text-brand-blue font-bold">{currentUser.email}</span>
+                  CURRENT USER: <span className="text-brand-blue font-bold">{adminUser?.email}</span>
                 </p>
               </div>
               
@@ -796,61 +652,6 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                   <span>{isRu ? "ОБНОВИТЬ" : "REFRESH"}</span>
                 </button>
               </div>
-            </div>
-
-            {/* Direct Admin Password Setup/Link Box */}
-            <div className="bg-white border border-neutral-200/80 p-6 rounded-2xl shadow-sm text-left relative overflow-hidden">
-              <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 text-neutral-100 font-mono text-[120px] leading-none font-bold select-none pointer-events-none opacity-40">
-                GP
-              </div>
-              
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                <div className="space-y-1.5 max-w-2xl">
-                  <div className="flex items-center gap-1.5 text-brand-blue font-mono text-[9px] tracking-widest uppercase font-bold">
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Быстрый вход по паролю / Email password configuration</span>
-                  </div>
-                  <h3 className="text-base font-bold text-neutral-900 tracking-tight">
-                    {isRu ? `Прямой доступ по паролю для ${currentUser?.email || ''}` : `Direct Password Access for ${currentUser?.email || ''}`}
-                  </h3>
-                  <p className="text-xs text-neutral-400 font-light leading-relaxed">
-                    {isRu 
-                      ? "Свяжите аккаунт, чтобы в будущем входить по паре e-mail и паролю, минуя авторизацию через Google. Кнопка ниже автоматически установит запрошенный вами пароль: "
-                      : "Link your account to log in using your e-mail and password, bypassing Google auth. The action below automatically configures your requested secret password: "}
-                    <code className="font-mono bg-neutral-100 text-[#e1222e] px-1.5 py-0.5 rounded font-black tracking-wide">NIGHTVOLT-ADMIN-ROOT2026</code>
-                  </p>
-                </div>
-                
-                <div className="shrink-0">
-                  <button
-                    onClick={handleLinkOrUpdatePassword}
-                    disabled={settingUpPassword}
-                    className="px-5 py-3 bg-[#e1222e] hover:bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all duration-300 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 inline-flex items-center gap-2"
-                  >
-                    {settingUpPassword ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <ShieldCheck className="w-4 h-4 animate-bounce" />
-                    )}
-                    <span>{isRu ? "ПРИВЯЗАТЬ / УСТАНОВИТЬ ПАРОЛЬ" : "LINK / CONFIGURE PASSWORD"}</span>
-                  </button>
-                </div>
-              </div>
-              
-              {passwordSetupStatus && (
-                <div className={`mt-4 p-4 border rounded-xl flex gap-3 text-xs leading-relaxed ${
-                  passwordSetupStatus.success 
-                    ? "bg-emerald-50 border-emerald-200/60 text-emerald-800"
-                    : "bg-rose-50 border-rose-200/60 text-rose-700"
-                }`}>
-                  {passwordSetupStatus.success ? (
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
-                  )}
-                  <p className="font-light">{passwordSetupStatus.msg}</p>
-                </div>
-              )}
             </div>
 
             {activeTab === 'candidates' ? (
