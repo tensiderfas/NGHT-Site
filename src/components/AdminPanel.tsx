@@ -82,6 +82,10 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const [emailInput, setEmailInput] = useState('ggg274415@gmail.com');
   const [passwordInput, setPasswordInput] = useState('');
   const [emailAuthLoading, setEmailAuthLoading] = useState(false);
+
+  // Link/Update admin password states
+  const [passwordSetupStatus, setPasswordSetupStatus] = useState<{ success?: boolean; msg?: string } | null>(null);
+  const [settingUpPassword, setSettingUpPassword] = useState(false);
   
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingData, setLoadingData] = useState(false);
@@ -411,6 +415,56 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
+  const handleLinkOrUpdatePassword = async () => {
+    setPasswordSetupStatus(null);
+    setSettingUpPassword(true);
+    try {
+      const email = AUTHORIZED_EMAIL;
+      const targetPassword = "NIGHTVOLT-ADMIN-ROOT2026";
+      
+      if (!auth.currentUser) {
+        throw new Error(isRu ? "Пользователь не авторизован" : "No active authenticated session.");
+      }
+
+      const { EmailAuthProvider, linkWithCredential, updatePassword } = await import("firebase/auth");
+      const credential = EmailAuthProvider.credential(email, targetPassword);
+      
+      try {
+        await linkWithCredential(auth.currentUser, credential);
+        setPasswordSetupStatus({
+          success: true,
+          msg: isRu
+            ? `Учетная запись успешно привязана! Теперь вы можете заходить по почте ggg274415@gmail.com с паролем: NIGHTVOLT-ADMIN-ROOT2026`
+            : `Account successfully linked! You can now log in via email ggg274415@gmail.com with password: NIGHTVOLT-ADMIN-ROOT2026`
+        });
+      } catch (err: any) {
+        console.log("Link attempt result:", err);
+        if (err.code === "auth/provider-already-linked" || err.code === "auth/credential-already-in-use" || err.code === "auth/email-already-in-use") {
+          // If already linked or already registered as email/password, update password directly
+          await updatePassword(auth.currentUser, targetPassword);
+          setPasswordSetupStatus({
+            success: true,
+            msg: isRu
+              ? `Пароль для входа по email изменен на: NIGHTVOLT-ADMIN-ROOT2026`
+              : `Email password successfully updated to: NIGHTVOLT-ADMIN-ROOT2026`
+          });
+        } else {
+          throw err;
+        }
+      }
+    } catch (err: any) {
+      console.error("Setting password failed:", err);
+      setPasswordSetupStatus({
+        success: false,
+        msg: isRu
+          ? `Ошибка настройки пароля: ${err?.message || "Провайдер заблокирован"}`
+          : `Failed setting/updating password: ${err?.message || "Provider error"}`
+      });
+    } finally {
+      setSettingUpPassword(false);
+    }
+  };
+
   const handleDeleteSubmission = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm(isRu ? 'Вы уверены, что хотите удалить эту анкету?' : 'Are you sure you want to delete this submission?')) {
@@ -694,6 +748,61 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                   <span>{isRu ? "ОБНОВИТЬ" : "REFRESH"}</span>
                 </button>
               </div>
+            </div>
+
+            {/* Direct Admin Password Setup/Link Box */}
+            <div className="bg-white border border-neutral-200/80 p-6 rounded-2xl shadow-sm text-left relative overflow-hidden">
+              <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 text-neutral-100 font-mono text-[120px] leading-none font-bold select-none pointer-events-none opacity-40">
+                GP
+              </div>
+              
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                <div className="space-y-1.5 max-w-2xl">
+                  <div className="flex items-center gap-1.5 text-brand-blue font-mono text-[9px] tracking-widest uppercase font-bold">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Быстрый вход по паролю / Email password configuration</span>
+                  </div>
+                  <h3 className="text-base font-bold text-neutral-900 tracking-tight">
+                    {isRu ? "Прямой доступ по паролю для ggg274415@gmail.com" : "Direct Password Access for ggg274415@gmail.com"}
+                  </h3>
+                  <p className="text-xs text-neutral-400 font-light leading-relaxed">
+                    {isRu 
+                      ? "Свяжите аккаунт, чтобы в будущем входить по паре e-mail и паролю, минуя авторизацию через Google. Кнопка ниже автоматически установит запрошенный вами пароль: "
+                      : "Link your account to log in using your e-mail and password, bypassing Google auth. The action below automatically configures your requested secret password: "}
+                    <code className="font-mono bg-neutral-100 text-[#e1222e] px-1.5 py-0.5 rounded font-black tracking-wide">NIGHTVOLT-ADMIN-ROOT2026</code>
+                  </p>
+                </div>
+                
+                <div className="shrink-0">
+                  <button
+                    onClick={handleLinkOrUpdatePassword}
+                    disabled={settingUpPassword}
+                    className="px-5 py-3 bg-[#e1222e] hover:bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all duration-300 shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 inline-flex items-center gap-2"
+                  >
+                    {settingUpPassword ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <ShieldCheck className="w-4 h-4 animate-bounce" />
+                    )}
+                    <span>{isRu ? "ПРИВЯЗАТЬ / УСТАНОВИТЬ ПАРОЛЬ" : "LINK / CONFIGURE PASSWORD"}</span>
+                  </button>
+                </div>
+              </div>
+              
+              {passwordSetupStatus && (
+                <div className={`mt-4 p-4 border rounded-xl flex gap-3 text-xs leading-relaxed ${
+                  passwordSetupStatus.success 
+                    ? "bg-emerald-50 border-emerald-200/60 text-emerald-800"
+                    : "bg-rose-50 border-rose-200/60 text-rose-700"
+                }`}>
+                  {passwordSetupStatus.success ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+                  )}
+                  <p className="font-light">{passwordSetupStatus.msg}</p>
+                </div>
+              )}
             </div>
 
             {activeTab === 'candidates' ? (
