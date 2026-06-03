@@ -20,6 +20,8 @@ import {
   MapPin,
   Flame
 } from 'lucide-react';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 
 interface VacanciesProps {
   lang: 'RU' | 'EN';
@@ -95,7 +97,7 @@ I would like to apply for the position: ${activeJobTitleEn}
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDirectSubmit = (e: React.FormEvent) => {
+  const handleDirectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError('');
 
@@ -111,30 +113,60 @@ I would like to apply for the position: ${activeJobTitleEn}
     setIsSubmitting(true);
     setSubmitStep(1); // "Валидация полей..."
 
-    setTimeout(() => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
       setSubmitStep(2); // "Формирование пакета отправки..."
-      setTimeout(() => {
-        setSubmitStep(3); // "Передача анкеты в базу NIGHTVOLT..."
-        setTimeout(() => {
-          try {
-            const currentSubmissions = JSON.parse(localStorage.getItem('nightvolt_vacancies_submissions') || '[]');
-            const newSubmission = {
-              id: 'app_' + Date.now(),
-              date: new Date().toISOString(),
-              data: { ...formData, activeJobTitleRu: jobs.find(j => j.id === formData.targetVacancy)?.titleRu }
-            };
-            currentSubmissions.push(newSubmission);
-            localStorage.setItem('nightvolt_vacancies_submissions', JSON.stringify(currentSubmissions));
-          } catch (err) {
-            console.warn('LocalStorage unavailable or quota exceeded', err);
-          }
+      
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setSubmitStep(3); // "Передача анкеты в базу NIGHTVOLT..."
 
-          setIsSubmitting(false);
-          setIsSubmitted(true);
-          setSubmitStep(0);
-        }, 1200);
-      }, 1000);
-    }, 800);
+      const submissionId = 'app_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+      const submissionRef = doc(db, 'submissions', submissionId);
+      
+      const payload = {
+        id: submissionId,
+        createdAt: serverTimestamp(),
+        nameAgeCity: formData.nameAgeCity.trim(),
+        targetVacancy: formData.targetVacancy,
+        contact: formData.contact.trim(),
+        experience: formData.experience.trim() || '',
+        previousRoles: formData.previousRoles.trim() || '',
+        collaborations: formData.collaborations.trim() || '',
+        tasks: formData.tasks.trim() || '',
+        portfolio: formData.portfolio.trim() || '',
+        activeJobTitleRu: jobs.find(j => j.id === formData.targetVacancy)?.titleRu || formData.targetVacancy
+      };
+
+      await setDoc(submissionRef, payload);
+
+      try {
+        const currentSubmissions = JSON.parse(localStorage.getItem('nightvolt_vacancies_submissions') || '[]');
+        currentSubmissions.push({
+          id: submissionId,
+          date: new Date().toISOString(),
+          data: payload
+        });
+        localStorage.setItem('nightvolt_vacancies_submissions', JSON.stringify(currentSubmissions));
+      } catch (err) {
+        console.warn('LocalStorage local cache fallback issue', err);
+      }
+
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      setSubmitStep(0);
+    } catch (err) {
+      console.error('Error submitting application directly to Firestore:', err);
+      try {
+        handleFirestoreError(err, OperationType.CREATE, 'submissions');
+      } catch (mappedError) {
+        setValidationError(isRu 
+          ? 'Произошла ошибка при сохранении анкеты в облачную базу. Пожалуйста, попробуйте снова или скопируйте резюме напрямую.' 
+          : 'Failed to write application to cloud database. Please retry or copy/paste manually.'
+        );
+      }
+      setIsSubmitting(false);
+      setSubmitStep(0);
+    }
   };
 
   const jobs = [

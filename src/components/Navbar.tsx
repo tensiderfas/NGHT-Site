@@ -12,9 +12,10 @@ interface NavbarProps {
   onNavigateToPromo?: () => void;
   onNavigateToAbout?: () => void;
   onNavigateToVacancies?: () => void;
+  onNavigateToPartners?: () => void;
 }
 
-export default function Navbar({ lang, onToggleLang, onScrollTo, onNavigateToTerms, onNavigateToPromo, onNavigateToAbout, onNavigateToVacancies }: NavbarProps) {
+export default function Navbar({ lang, onToggleLang, onScrollTo, onNavigateToTerms, onNavigateToPromo, onNavigateToAbout, onNavigateToVacancies, onNavigateToPartners }: NavbarProps) {
   const [currentTime, setCurrentTime] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [logoGlitch, setLogoGlitch] = useState(false);
@@ -73,7 +74,7 @@ export default function Navbar({ lang, onToggleLang, onScrollTo, onNavigateToTer
   const navLinks = [
     { label: t.philosophy, target: '#philosophy' },
     { label: t.services, target: '#services' },
-    { label: t.techSpec, target: '#about-platform' },
+    { label: t.partners, target: '#partners' },
     { label: t.sendDemo, target: '#submit-demo' }
   ];
 
@@ -117,8 +118,8 @@ export default function Navbar({ lang, onToggleLang, onScrollTo, onNavigateToTer
             <button
               key={link.label}
               onClick={() => {
-                if (link.target === '#about-platform' && onNavigateToAbout) {
-                  onNavigateToAbout();
+                if (link.target === '#partners' && onNavigateToPartners) {
+                  onNavigateToPartners();
                 } else {
                   onScrollTo(link.target);
                 }

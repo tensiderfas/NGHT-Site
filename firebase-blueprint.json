@@ -1,0 +1,49 @@
+{
+  "entities": {
+    "submission": {
+      "title": "Job Submission",
+      "description": "Submitted candidate questionnaire",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "nameAgeCity": { "type": "string" },
+        "targetVacancy": { "type": "string" },
+        "experience": { "type": "string" },
+        "previousRoles": { "type": "string" },
+        "collaborations": { "type": "string" },
+        "tasks": { "type": "string" },
+        "portfolio": { "type": "string" },
+        "contact": { "type": "string" },
+        "activeJobTitleRu": { "type": "string" }
+      },
+      "required": ["id", "createdAt", "nameAgeCity", "contact", "targetVacancy"]
+    },
+    "partner": {
+      "title": "Partner",
+      "description": "Affiliated partner of the music label",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "name": { "type": "string" },
+        "descriptionRu": { "type": "string" },
+        "descriptionEn": { "type": "string" },
+        "logoSvg": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "websiteUrl": { "type": "string" }
+      },
+      "required": ["id", "createdAt", "name", "descriptionRu", "descriptionEn"]
+    }
+  },
+  "firestore": {
+    "/submissions/{submissionId}": {
+      "schema": "submission",
+      "description": "Collection of job applicant forms"
+    },
+    "/partners/{partnerId}": {
+      "schema": "partner",
+      "description": "Collection of music label partners"
+    }
+  }
+}

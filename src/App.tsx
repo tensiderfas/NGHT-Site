@@ -15,6 +15,9 @@ import Footer from './components/Footer';
 import DistributionTerms from './components/DistributionTerms';
 import CustomCursor from './components/CustomCursor';
 import Vacancies from './components/Vacancies';
+import AdminPanel from './components/AdminPanel';
+import Partners from './components/Partners';
+import PartnersTeaser from './components/PartnersTeaser';
 
 export default function App() {
   const [siteLoaded, setSiteLoaded] = useState(false);
@@ -24,6 +27,29 @@ export default function App() {
   const [viewPromoTools, setViewPromoTools] = useState(false);
   const [viewAbout, setViewAbout] = useState(false);
   const [viewVacancies, setViewVacancies] = useState(false);
+  const [viewAdmin, setViewAdmin] = useState(false);
+  const [viewPartners, setViewPartners] = useState(false);
+
+  // Listen for hash-based hidden routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#admin' || hash === '#nightvolt-admin') {
+        setViewAdmin(true);
+        setViewTerms(false);
+        setViewPromoTools(false);
+        setViewAbout(false);
+        setViewVacancies(false);
+        setViewPartners(false);
+      } else if (hash === '' || hash === '#') {
+        setViewAdmin(false);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const handleNavigateToTerms = (tab: 'terms' | 'platform' | 'agreement' | 'privacy' | 'dmca' = 'terms') => {
     setActiveLegalTab(tab);
@@ -31,6 +57,7 @@ export default function App() {
     setViewPromoTools(false);
     setViewAbout(false);
     setViewVacancies(false);
+    setViewPartners(false);
   };
 
   const handleNavigateToPromo = () => {
@@ -38,6 +65,7 @@ export default function App() {
     setViewTerms(false);
     setViewAbout(false);
     setViewVacancies(false);
+    setViewPartners(false);
   };
 
   const handleNavigateToAbout = () => {
@@ -45,6 +73,7 @@ export default function App() {
     setViewTerms(false);
     setViewPromoTools(false);
     setViewVacancies(false);
+    setViewPartners(false);
   };
 
   const handleNavigateToVacancies = () => {
@@ -52,15 +81,27 @@ export default function App() {
     setViewTerms(false);
     setViewPromoTools(false);
     setViewAbout(false);
+    setViewPartners(false);
   };
 
-  // Global smooth navigation scroll assistance
+  const handleNavigateToPartners = () => {
+    setViewPartners(true);
+    setViewTerms(false);
+    setViewPromoTools(false);
+    setViewAbout(false);
+    setViewVacancies(false);
+  };
+
+            {/* Global smooth navigation scroll assistance */}
   const handleScrollTo = (selector: string) => {
-    if (viewTerms || viewPromoTools || viewAbout || viewVacancies) {
+    if (viewTerms || viewPromoTools || viewAbout || viewVacancies || viewAdmin || viewPartners) {
       setViewTerms(false);
       setViewPromoTools(false);
       setViewAbout(false);
       setViewVacancies(false);
+      setViewAdmin(false);
+      setViewPartners(false);
+      window.location.hash = '';
       // Wait minor duration for component unmount/mount to complete, then slide
       setTimeout(() => {
         const targetElement = document.querySelector(selector);
@@ -87,7 +128,7 @@ export default function App() {
   // Auto scroll to top when changing sub-views or active tab
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies]);
+  }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewAdmin, viewPartners]);
 
   return (
     <div id="site-root-container" className="min-h-screen bg-[#fafafc] relative overflow-x-hidden selection:bg-brand-blue selection:text-white">
@@ -126,12 +167,29 @@ export default function App() {
               onNavigateToPromo={handleNavigateToPromo}
               onNavigateToAbout={handleNavigateToAbout}
               onNavigateToVacancies={handleNavigateToVacancies}
+              onNavigateToPartners={handleNavigateToPartners}
             />
 
             {/* Structured Page Content routing */}
             <main className="flex-grow pt-[1px]">
               <AnimatePresence mode="wait">
-                {viewTerms ? (
+                {viewAdmin ? (
+                  <motion.div
+                    key="admin-subpage"
+                    initial={{ opacity: 0, scale: 0.99, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: -20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <AdminPanel 
+                      lang={lang} 
+                      onClose={() => {
+                        window.location.hash = '';
+                        setViewAdmin(false);
+                      }} 
+                    />
+                  </motion.div>
+                ) : viewTerms ? (
                   <motion.div
                     key="terms-subpage"
                     initial={{ opacity: 0, scale: 0.99, x: 20 }}
@@ -184,6 +242,19 @@ export default function App() {
                       onBack={() => setViewVacancies(false)} 
                     />
                   </motion.div>
+                ) : viewPartners ? (
+                  <motion.div
+                    key="partners-subpage"
+                    initial={{ opacity: 0, scale: 0.99, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: -20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <Partners 
+                      lang={lang} 
+                      onBack={() => setViewPartners(false)} 
+                    />
+                  </motion.div>
                 ) : (
                   <motion.div
                     key="home-mainpage"
@@ -207,6 +278,9 @@ export default function App() {
                     {/* Immersive Biography, Foundations and Team Board Teaser Grid */}
                     <AboutTeaser lang={lang} onReadFull={handleNavigateToAbout} />
                     
+                    {/* Label partners teaser showcasing Media Vision Group */}
+                    <PartnersTeaser lang={lang} onViewAll={handleNavigateToPartners} />
+                    
                     {/* Secure embed portal for Intake demo submissions */}
                     <ContractSubmission lang={lang} />
                     
@@ -225,6 +299,7 @@ export default function App() {
               onNavigateToPromo={handleNavigateToPromo}
               onNavigateToAbout={handleNavigateToAbout}
               onNavigateToVacancies={handleNavigateToVacancies}
+              onNavigateToPartners={handleNavigateToPartners}
             />
 
           </motion.div>

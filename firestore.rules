@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Is Valid ID Helper
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Is Admin Helper based on the user's bootstrapped email
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email == 'ggg274415@gmail.com' && 
+             request.auth.token.email_verified == true;
+    }
+
+    // Validation helper for submission entity
+    function isValidSubmission(data) {
+      return data.keys().hasAll(['id', 'createdAt', 'nameAgeCity', 'targetVacancy', 'contact']) &&
+             data.keys().size() <= 12 &&
+             data.id is string && data.id.size() <= 100 &&
+             data.nameAgeCity is string && data.nameAgeCity.size() <= 500 &&
+             data.targetVacancy is string && data.targetVacancy.size() <= 100 &&
+             data.contact is string && data.contact.size() <= 300 &&
+             (!('experience' in data) || (data.experience is string && data.experience.size() <= 5000)) &&
+             (!('previousRoles' in data) || (data.previousRoles is string && data.previousRoles.size() <= 5000)) &&
+             (!('collaborations' in data) || (data.collaborations is string && data.collaborations.size() <= 5000)) &&
+             (!('tasks' in data) || (data.tasks is string && data.tasks.size() <= 5000)) &&
+             (!('portfolio' in data) || (data.portfolio is string && data.portfolio.size() <= 5000)) &&
+             (!('activeJobTitleRu' in data) || (data.activeJobTitleRu is string && data.activeJobTitleRu.size() <= 200));
+    }
+
+    // Validation helper for partner entity
+    function isValidPartner(data) {
+      return data.keys().hasAll(['id', 'createdAt', 'name', 'descriptionRu', 'descriptionEn']) &&
+             data.keys().size() <= 8 &&
+             data.id is string && data.id.size() <= 100 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.descriptionRu is string && data.descriptionRu.size() <= 5000 &&
+             data.descriptionEn is string && data.descriptionEn.size() <= 5000 &&
+             (!('logoSvg' in data) || (data.logoSvg is string && data.logoSvg.size() <= 50000)) &&
+             (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 1000)) &&
+             (!('websiteUrl' in data) || (data.websiteUrl is string && data.websiteUrl.size() <= 500));
+    }
+
+    // Submissions Security Policy
+    match /submissions/{submissionId} {
+      // Create is open to any visitor, but strictly validated
+      allow create: if isValidId(submissionId) && 
+                       isValidSubmission(request.resource.data) &&
+                       request.resource.data.createdAt == request.time;
+                       
+      // Get/List is only allowed for the bootstrapped admin
+      allow read: if isAdmin();
+      
+      // Nobody can update or delete submissions
+      allow update, delete: if false;
+    }
+
+    // Partners Security Policy
+    match /partners/{partnerId} {
+      // Public read operations for display on main page and subpages
+      allow read: if isValidId(partnerId);
+
+      // Writes are limited strictly to the verified administrator
+      allow create: if isValidId(partnerId) && 
+                       isAdmin() && 
+                       isValidPartner(request.resource.data) &&
+                       request.resource.data.createdAt == request.time;
+
+      allow update: if isValidId(partnerId) && 
+                       isAdmin() && 
+                       isValidPartner(request.resource.data);
+
+      allow delete: if isValidId(partnerId) && 
+                       isAdmin();
+    }
+  }
+}
