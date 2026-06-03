@@ -39,6 +39,9 @@ import {
 } from 'firebase/firestore';
 import { 
   signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut, 
   onAuthStateChanged, 
   User as FirebaseUser 
@@ -72,6 +75,13 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState<string>('');
+  const [authSuccessMsg, setAuthSuccessMsg] = useState<string>('');
+  
+  // Alternative Email/Password admin login states
+  const [useEmailAuth, setUseEmailAuth] = useState(false);
+  const [emailInput, setEmailInput] = useState('ggg274415@gmail.com');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [emailAuthLoading, setEmailAuthLoading] = useState(false);
   
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingData, setLoadingData] = useState(false);
@@ -294,6 +304,103 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
+  const handleEmailPasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthSuccessMsg('');
+    setEmailAuthLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+    } catch (err: any) {
+      console.error('Email password login error:', err);
+      let message = isRu
+        ? 'Не удалось войти по e-mail. Убедитесь, что логин и пароль администратора верны.'
+        : 'Failed signing in with Email. Double check credentials and console setup.';
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        message = isRu
+          ? 'Неверный e-mail или пароль администратора.'
+          : 'Invalid admin e-mail or password.';
+      } else if (err.code === 'auth/user-disabled') {
+        message = isRu ? 'Учетная запись администратора отключена.' : 'Admin account has been disabled.';
+      }
+      setAuthError(message);
+    } finally {
+      setEmailAuthLoading(false);
+    }
+  };
+
+  const handleRegisterAdminWithPassword = async () => {
+    setAuthError('');
+    setAuthSuccessMsg('');
+    
+    if (emailInput.trim() !== AUTHORIZED_EMAIL) {
+      setAuthError(isRu 
+        ? 'Регистрация разрешена только для официальной почты администратора: ' + AUTHORIZED_EMAIL
+        : 'Registration is exclusively allowed for the official admin email: ' + AUTHORIZED_EMAIL
+      );
+      return;
+    }
+
+    if (passwordInput.length < 6) {
+      setAuthError(isRu
+        ? 'Пароль должен содержать минимум 6 символов.'
+        : 'Password must be at least 6 characters.'
+      );
+      return;
+    }
+
+    setEmailAuthLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+      setAuthSuccessMsg(isRu
+        ? 'Учетная запись успешно создана и привязана! Вы вошли как администратор.'
+        : 'Admin account successfully created and bound! You are logged in.'
+      );
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      if (err.code === 'auth/email-already-in-use') {
+        setAuthError(isRu
+          ? 'Данная почта уже используется. Войдите под своим текущим паролем или нажмите на кнопку ниже для сброса/установки нового пароля.'
+          : 'This email is already in use. Please sign in with your password or use the reset/setup button below.'
+        );
+      } else {
+        setAuthError(err?.message || String(err));
+      }
+    } finally {
+      setEmailAuthLoading(false);
+    }
+  };
+
+  const handleSendPasswordReset = async () => {
+    setAuthError('');
+    setAuthSuccessMsg('');
+    
+    if (emailInput.trim() !== AUTHORIZED_EMAIL) {
+      setAuthError(isRu 
+        ? 'Сброс пароля доступен только для официальной почты администратора: ' + AUTHORIZED_EMAIL
+        : 'Password reset is only allowed for the official admin email: ' + AUTHORIZED_EMAIL
+      );
+      return;
+    }
+
+    setEmailAuthLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, emailInput.trim());
+      setAuthSuccessMsg(isRu
+        ? 'Ссылка для создания/сброса пароля отправлена на вашу почту! Проверьте входящие или папку Спам.'
+        : 'Password setup link has been sent to your email! Please check your inbox or Spam folder.'
+      );
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      setAuthError(isRu
+        ? 'Не удалось отправить письмо со ссылкой. Убедитесь, что e-mail/провайдер настроен.'
+        : 'Failed sending password reset. Please verify setup.'
+      );
+    } finally {
+      setEmailAuthLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -418,19 +525,115 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
               </div>
             )}
 
+            {authSuccessMsg && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200/60 rounded-xl text-left flex gap-3 text-emerald-700 text-xs font-light">
+                <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
+                <p>{authSuccessMsg}</p>
+              </div>
+            )}
+
             {loadingAuth ? (
               <div className="flex items-center justify-center gap-2 font-mono text-[11px] text-neutral-400">
                 <div className="w-3.5 h-3.5 border-2 border-neutral-300 border-t-transparent rounded-full animate-spin" />
                 <span>{isRu ? 'ПРОВЕРКА АВТОРИЗАЦИИ...' : 'AUTHORIZING STATUS...'}</span>
               </div>
             ) : (
-              <button
-                onClick={handleLogin}
-                className="w-full flex items-center justify-center gap-3 py-3 bg-[#e1222e] hover:bg-neutral-950 border border-[#e1222e] hover:border-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all duration-300 shadow-sm cursor-pointer active:scale-95"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>{isRu ? "ВОЙТИ ЧЕРЕЗ GOOGLE" : "OAUTH GOOGLE AUTH"}</span>
-              </button>
+              <div className="space-y-4">
+                {!useEmailAuth ? (
+                  <div className="space-y-4">
+                    <button
+                      onClick={handleLogin}
+                      className="w-full flex items-center justify-center gap-3 py-3 bg-[#e1222e] hover:bg-neutral-950 border border-[#e1222e] hover:border-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all duration-300 shadow-sm cursor-pointer active:scale-95"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>{isRu ? "ВОЙТИ ЧЕРЕЗ GOOGLE" : "OAUTH GOOGLE AUTH"}</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setUseEmailAuth(true)}
+                      className="text-xs text-neutral-400 hover:text-brand-orange transition-colors font-mono tracking-wide underline bg-transparent border-none cursor-pointer"
+                    >
+                      {isRu ? "Войти или настроить пароль" : "Sign in / Setup with password"}
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleEmailPasswordLogin} className="space-y-4 text-left">
+                    <div className="space-y-1.5">
+                      <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block select-none">
+                        {isRu ? "E-mail Администратора *" : "Admin Email *"}
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all font-mono"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block select-none">
+                        {isRu ? "Пароль *" : "Password *"}
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all font-mono"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 pt-2">
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setUseEmailAuth(false)}
+                          className="flex-1 py-2.5 border border-neutral-200 hover:bg-neutral-50 text-neutral-600 rounded-xl text-xs font-mono font-bold tracking-wide transition-all uppercase cursor-pointer select-none"
+                        >
+                          {isRu ? "Назад" : "Back"}
+                        </button>
+                        
+                        <button
+                          type="submit"
+                          disabled={emailAuthLoading}
+                          className="flex-1 py-2.5 bg-[#e1222e] hover:bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wide transition-all uppercase cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 select-none font-bold"
+                        >
+                          {emailAuthLoading ? (
+                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <LogIn className="w-3.5 h-3.5" />
+                          )}
+                          <span>{isRu ? "ВОЙТИ" : "LOGIN"}</span>
+                        </button>
+                      </div>
+
+                      <div className="border-t border-neutral-100 mt-4 pt-4 space-y-3">
+                        <button
+                          type="button"
+                          disabled={emailAuthLoading}
+                          onClick={handleRegisterAdminWithPassword}
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white border-none rounded-xl text-xs font-mono font-bold tracking-wide transition-all uppercase cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 select-none"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 animate-pulse" />
+                          <span>{isRu ? "СОЗДАТЬ/ЗАРЕГИСТРИРОВАТЬ ПАРОЛЬ" : "REGISTER / CREATE PASSWORD"}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={emailAuthLoading}
+                          onClick={handleSendPasswordReset}
+                          className="w-full text-center py-1.5 text-[11px] text-neutral-400 hover:text-brand-orange transition-colors font-mono tracking-wide underline bg-transparent border-none cursor-pointer"
+                        >
+                          {isRu ? "Сбросить/Установить пароль по e-mail ссылке" : "Setup / Reset password via email link"}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                )}
+              </div>
             )}
 
             <div className="border-t border-neutral-100 pt-5 font-mono text-[9px] text-neutral-400">

@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import https from "https";
 import { createServer as createViteServer } from "vite";
 
 async function startServer() {
@@ -10,6 +11,39 @@ async function startServer() {
   // JSON and URL-encoded parsers with large limit for image uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Firebase Auth Proxy for seamless custom domain authentication without third-party cookie blocks
+  app.all("/__/auth/*", (req, res) => {
+    const targetUrl = `https://strange-abacus-cv8b6.firebaseapp.com${req.originalUrl}`;
+    
+    // Forward headers, but rewrite host to match the Firebase app target domain
+    const headers = { ...req.headers };
+    headers.host = "strange-abacus-cv8b6.firebaseapp.com";
+    
+    // Remove connection header to let Node manage connection pooling
+    delete headers.connection;
+
+    const proxyReq = https.request(
+      targetUrl,
+      {
+        method: req.method,
+        headers: headers,
+      },
+      (proxyRes) => {
+        // Forward response status and original headers back to client
+        res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
+        proxyRes.pipe(res, { end: true });
+      }
+    );
+
+    proxyReq.on("error", (err) => {
+      console.error("Firebase Auth Proxy connection error:", err);
+      res.status(500).send("Firebase Auth Proxy Connection Failed");
+    });
+
+    // Pipe client's original request body (if any) directly to the proxy request
+    req.pipe(proxyReq, { end: true });
+  });
 
   // API endpoint for uploading partner logo
   app.post("/api/upload-logo", async (req, res) => {

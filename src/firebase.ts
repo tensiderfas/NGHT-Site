@@ -3,7 +3,17 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
-const app = initializeApp(firebaseConfig);
+// Dynamically use the current custom domain as authDomain when running in a production browser.
+// This routes all login frames through the proxy of nightvolt.ru to bypass cross-origin third-party cookie blocks.
+const isBrowser = typeof window !== 'undefined';
+const resolvedConfig = {
+  ...firebaseConfig,
+  authDomain: isBrowser && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')
+    ? window.location.hostname 
+    : firebaseConfig.authDomain
+};
+
+const app = initializeApp(resolvedConfig);
 export const db = getFirestore(app); /* Uses correct active database */
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
