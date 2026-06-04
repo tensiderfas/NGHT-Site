@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 // Customized for REST API Auth Proxying
 import { Timestamp } from 'firebase/firestore';
+import { getApiUrl } from '../apiConfig';
 
 interface AdminPanelProps {
   lang: 'RU' | 'EN';
@@ -128,7 +129,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
         const base64String = reader.result as string;
         
         try {
-          const response = await fetch('/api/upload-logo', {
+          const response = await fetch(getApiUrl('/api/upload-logo'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     if (token) {
-      fetch('/api/admin/me', {
+      fetch(getApiUrl('/api/admin/me'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -215,7 +216,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setDataError('');
     try {
       const token = localStorage.getItem('admin_token');
-      const response = await fetch('/api/admin/submissions', {
+      const response = await fetch(getApiUrl('/api/admin/submissions'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -241,7 +242,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const fetchPartners = async () => {
     setLoadingPartners(true);
     try {
-      const response = await fetch('/api/admin/partners');
+      const response = await fetch(getApiUrl('/api/admin/partners'));
       if (!response.ok) {
         throw new Error('API request failed');
       }
@@ -266,7 +267,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setPartnerMsg('');
     try {
       const token = localStorage.getItem('admin_token');
-      const response = await fetch('/api/admin/partners', {
+      const response = await fetch(getApiUrl('/api/admin/partners'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -305,7 +306,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
 
     try {
       const token = localStorage.getItem('admin_token');
-      const response = await fetch(`/api/admin/partners/${id}`, {
+      const response = await fetch(getApiUrl(`/api/admin/partners/${id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -329,7 +330,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setAuthSuccessMsg('');
     setEmailAuthLoading(true);
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch(getApiUrl('/api/admin/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -374,7 +375,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
 
     setEmailAuthLoading(true);
     try {
-      const response = await fetch('/api/admin/register', {
+      const response = await fetch(getApiUrl('/api/admin/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -402,7 +403,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('admin_token');
-      await fetch('/api/admin/logout', {
+      await fetch(getApiUrl('/api/admin/logout'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -427,7 +428,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     
     try {
       const token = localStorage.getItem('admin_token');
-      const response = await fetch(`/api/admin/submissions/${id}`, {
+      const response = await fetch(getApiUrl(`/api/admin/submissions/${id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

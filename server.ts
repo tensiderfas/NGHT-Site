@@ -26,6 +26,36 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+  // Native CORS logic to support cross-origin logins from custom domains like nightvolt.ru or verification frames
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+      // Allow nightvolt.ru, its subdomains, Cloud Run links, and local testing origins
+      if (
+        origin === "https://nightvolt.ru" ||
+        origin.endsWith(".nightvolt.ru") ||
+        origin.includes("localhost") ||
+        origin.includes("127.0.0.1") ||
+        origin.includes("run.app") ||
+        origin.includes("aistudio") ||
+        origin.includes("webcontainer")
+      ) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+      }
+    } else {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+
+    // Handle OPTIONS preflight requests
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
   // Load Firebase Config
   let firebaseConfig: any = {};
   try {
