@@ -211,16 +211,16 @@ export default function Hero({ lang, onScrollTo }: HeroProps) {
         {/* Dynamic metrics */}
         <div key={lang + "-metrics"} className="flex gap-12 font-mono text-left">
           <div className="flex flex-col gap-1">
-            <span className="text-[9px] tracking-wider text-neutral-400 uppercase">{t.royaltyDesc}</span>
+            <span className="text-[9px] tracking-wider text-neutral-500 dark:text-neutral-400 uppercase">{t.royaltyDesc}</span>
             <span className="text-xs font-black tracking-widest text-brand-orange">{t.royaltyDistribution}</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[9px] tracking-wider text-neutral-400 uppercase">{t.supplyDesc}</span>
-            <span className="text-xs font-black tracking-widest text-neutral-900 dark:text-neutral-200">{t.supplyChannels}</span>
+            <span className="text-[9px] tracking-wider text-neutral-500 dark:text-neutral-400 uppercase">{t.supplyDesc}</span>
+            <span className="text-xs font-black tracking-widest text-neutral-900 dark:text-neutral-100">{t.supplyChannels}</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[9px] tracking-wider text-neutral-400 uppercase">{t.deliveryDesc}</span>
-            <span className="text-xs font-black tracking-widest text-neutral-900 dark:text-neutral-200">{t.deliverySpeed}</span>
+            <span className="text-[9px] tracking-wider text-neutral-500 dark:text-neutral-400 uppercase">{t.deliveryDesc}</span>
+            <span className="text-xs font-black tracking-widest text-neutral-900 dark:text-neutral-100">{t.deliverySpeed}</span>
           </div>
         </div>
 
