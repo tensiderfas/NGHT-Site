@@ -25,9 +25,20 @@ import {
   Calendar,
   X
 } from 'lucide-react';
-// Customized for REST API Auth Proxying
-import { Timestamp } from 'firebase/firestore';
-import { getApiUrl } from '../apiConfig';
+// Direct Firebase client-side database connections
+import { 
+  getDoc, 
+  setDoc, 
+  deleteDoc, 
+  getDocs, 
+  collection, 
+  doc, 
+  query, 
+  orderBy, 
+  serverTimestamp,
+  Timestamp 
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface AdminPanelProps {
   lang: 'RU' | 'EN';
@@ -90,30 +101,12 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadedLogoName, setUploadedLogoName] = useState('');
 
-  const safeParseResponse = async (response: Response, defaultErrorText: string) => {
-    let text = '';
-    try {
-      text = await response.text();
-    } catch (e) {
-      throw new Error(`${defaultErrorText} (Could not read response: ${e instanceof Error ? e.message : String(e)})`);
-    }
-
-    try {
-      const data = JSON.parse(text);
-      if (!response.ok) {
-        throw new Error(data.error || defaultErrorText);
-      }
-      return data;
-    } catch (e: any) {
-      if (!response.ok) {
-        const cleanSnippet = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
-        throw new Error(`${defaultErrorText} (Status ${response.status}): ${cleanSnippet || 'HTML response'}`);
-      }
-      throw new Error(isRu 
-        ? `Ошибка при расшифровке ответа сервера: ${e.message || String(e)}` 
-        : `Failed to decode server response: ${e.message || String(e)}`
-      );
-    }
+  // Helper to hash passwords securely using standard WebCrypto API in the browser
+  const hashPassword = async (password: string): Promise<string> => {
+    const msgBuffer = new TextEncoder().encode(password);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,36 +120,16 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64String = reader.result as string;
-        
         try {
-          const response = await fetch(getApiUrl('/api/upload-logo'), {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              filename: file.name,
-              base64: base64String,
-            }),
-          });
-
-          const data = await safeParseResponse(response, isRu ? 'Ошибка загрузки логотипа' : 'Failed uploading logo');
-          
-          if (data.success) {
-            setPartnerForm(prev => ({ ...prev, logoUrl: data.url }));
-            setUploadedLogoName(file.name);
-            setPartnerMsg(isRu 
-              ? `Логотип "${file.name}" загружен и автоматически сопоставлен на диске!` 
-              : `Logo "${file.name}" successfully uploaded and mapped on disk!`
-            );
-          } else {
-            setPartnerMsg(isRu 
-              ? `Ошибка загрузки логотипа: ${data.error || 'Неизвестная ошибка'}` 
-              : `Failed uploading logo: ${data.error || 'Unknown error'}`
-            );
-          }
+          // Store Base64 directly into Firestore partner form logoUrl
+          setPartnerForm(prev => ({ ...prev, logoUrl: base64String }));
+          setUploadedLogoName(file.name);
+          setPartnerMsg(isRu 
+            ? `Логотип "${file.name}" успешно загружен!` 
+            : `Logo "${file.name}" successfully loaded!`
+          );
         } catch (uploadErr: any) {
-          setPartnerMsg(uploadErr.message || (isRu ? 'Ошибка отправки логотипа.' : 'Error sending logo.'));
+          setPartnerMsg(uploadErr.message || (isRu ? 'Ошибка обработки логотипа.' : 'Error processing logo.'));
         } finally {
           setUploadingLogo(false);
         }
@@ -165,15 +138,14 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
         setPartnerMsg(isRu ? 'Ошибка чтения файла.' : 'Error reading file.');
         setUploadingLogo(false);
       };
-      
       reader.readAsDataURL(file);
-
     } catch (err: any) {
       console.error(err);
-      setPartnerMsg(isRu ? 'Не удалось связаться с сервером для загрузки.' : 'Failed contacting upload server.');
+      setPartnerMsg(isRu ? 'Не удалось прочитать загруженный файл.' : 'Failed reading uploaded file.');
       setUploadingLogo(false);
     }
   };
+
   const [partnerSubmitting, setPartnerSubmitting] = useState(false);
   const [partnerMsg, setPartnerMsg] = useState('');
 
@@ -181,51 +153,68 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     if (token) {
-      fetch(getApiUrl('/api/admin/me'), {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.authenticated) {
-          setAdminUser({ email: data.email });
-          fetchSubmissions();
-          fetchPartners();
-        } else {
+      setLoadingAuth(true);
+      const sessionRef = doc(db, 'admin_sessions', token);
+      getDoc(sessionRef)
+        .then((docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data && data.expiresAt > Date.now()) {
+              setAdminUser({ email: data.email });
+              fetchSubmissions();
+              fetchPartners();
+            } else {
+              deleteDoc(sessionRef).catch(() => {});
+              localStorage.removeItem('admin_token');
+              localStorage.removeItem('admin_email');
+              setAdminUser(null);
+            }
+          } else {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_email');
+            setAdminUser(null);
+          }
+          setLoadingAuth(false);
+        })
+        .catch((err) => {
+          console.error("Token verification error:", err);
           localStorage.removeItem('admin_token');
           localStorage.removeItem('admin_email');
           setAdminUser(null);
-        }
-        setLoadingAuth(false);
-      })
-      .catch(() => {
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_email');
-        setAdminUser(null);
-        setLoadingAuth(false);
-      });
+          setLoadingAuth(false);
+        });
     } else {
       setLoadingAuth(false);
     }
   }, []);
 
-  // Fetch Submissions from Custom API
+  // Fetch Submissions from Firestore directly
   const fetchSubmissions = async () => {
     setLoadingData(true);
     setDataError('');
     try {
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch(getApiUrl('/api/admin/submissions'), {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const submissionsRef = collection(db, 'submissions');
+      const q = query(submissionsRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const loaded: Submission[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        loaded.push({
+          id: docSnap.id,
+          nameAgeCity: data.nameAgeCity || '',
+          targetVacancy: data.targetVacancy || '',
+          contact: data.contact || '',
+          experience: data.experience || '',
+          previousRoles: data.previousRoles || '',
+          collaborations: data.collaborations || '',
+          tasks: data.tasks || '',
+          portfolio: data.portfolio || '',
+          activeJobTitleRu: data.activeJobTitleRu || '',
+          createdAt: data.createdAt ? data.createdAt : null,
+        });
       });
-      if (!response.ok) {
-        throw new Error('API request failed');
-      }
-      const data = await response.json();
-      setSubmissions(data);
+      setSubmissions(loaded);
     } catch (err) {
       console.error('Error fetching submissions from cloud database:', err);
       setDataError(
@@ -238,16 +227,24 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
-  // Fetch Partners List from Cloud Database
+  // Fetch Partners List from Firestore directly
   const fetchPartners = async () => {
     setLoadingPartners(true);
     try {
-      const response = await fetch(getApiUrl('/api/admin/partners'));
-      if (!response.ok) {
-        throw new Error('API request failed');
-      }
-      const data = await response.json();
-      setPartners(data);
+      const partnersRef = collection(db, 'partners');
+      const q = query(partnersRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const loaded: any[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        loaded.push({
+          id: docSnap.id,
+          ...data,
+          createdAt: data.createdAt ? data.createdAt : null,
+        });
+      });
+      setPartners(loaded);
     } catch (err) {
       console.error('Error fetching partners from backend:', err);
     } finally {
@@ -255,7 +252,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
-  // Handle addition of a new secure Partner document
+  // Handle addition of a new secure Partner document directly
   const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!partnerForm.name.trim() || !partnerForm.descriptionRu.trim() || !partnerForm.descriptionEn.trim()) {
@@ -266,17 +263,20 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setPartnerSubmitting(true);
     setPartnerMsg('');
     try {
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch(getApiUrl('/api/admin/partners'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(partnerForm)
+      const partnersRef = collection(db, 'partners');
+      const docId = partnerForm.id || doc(partnersRef).id;
+      const ref = doc(db, 'partners', docId);
+      
+      await setDoc(ref, {
+        id: docId,
+        name: partnerForm.name.trim(),
+        websiteUrl: partnerForm.websiteUrl?.trim() || "",
+        descriptionRu: partnerForm.descriptionRu.trim(),
+        descriptionEn: partnerForm.descriptionEn.trim(),
+        logoSvg: partnerForm.logoSvg?.trim() || "",
+        logoUrl: partnerForm.logoUrl?.trim() || "",
+        createdAt: serverTimestamp(),
       });
-
-      const data = await safeParseResponse(response, isRu ? 'Не удалось сохранить партнера' : 'Failed to save partner');
 
       setPartnerForm({
         name: '',
@@ -297,7 +297,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
-  // Handle deletion of a Partner document
+  // Handle deletion of a Partner document directly
   const handleDeletePartner = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm(isRu ? 'Вы уверены, что хотите удалить этого партнера?' : 'Are you sure you want to delete this partner?')) {
@@ -305,18 +305,8 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
 
     try {
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch(getApiUrl(`/api/admin/partners/${id}`), {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('API delete failed');
-      }
-      
+      const ref = doc(db, 'partners', id);
+      await deleteDoc(ref);
       setPartners(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Error deleting partner document:', err);
@@ -330,22 +320,40 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     setAuthSuccessMsg('');
     setEmailAuthLoading(true);
     try {
-      const response = await fetch(getApiUrl('/api/admin/login'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: emailInput.trim(),
-          password: passwordInput
-        })
-      });
+      const cleanEmail = emailInput.toLowerCase().trim();
       
-      const data = await safeParseResponse(response, isRu ? 'Не удалось войти' : 'Login failed');
+      if (!isAuthorizedEmail(cleanEmail)) {
+        throw new Error(isRu ? 'Доступ запрещен: неуполномоченный email.' : 'Access denied: Unauthorized email.');
+      }
+      
+      const userRef = doc(db, 'admins', cleanEmail);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        throw new Error(isRu 
+          ? "Аккаунт еще не зарегистрирован. Пожалуйста, сначала нажмите 'ЗАРЕГИСТРИРОВАТЬ АДМИНА' для настройки пароля." 
+          : "Account not registered yet. Please click on 'REGISTER ADMIN' first to set up your password.");
+      }
+      
+      const userData = userDoc.data();
+      const inputHash = await hashPassword(passwordInput);
+      
+      if (userData?.passwordHash !== inputHash) {
+        throw new Error(isRu ? "Неверный e-mail или пароль администратора." : "Invalid email or password.");
+      }
+      
+      // Generate standard random 32-character hex token in plain JS
+      const token = Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      
+      const sessionRef = doc(db, 'admin_sessions', token);
+      await setDoc(sessionRef, {
+        email: cleanEmail,
+        expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days session lifetime
+      });
 
-      localStorage.setItem('admin_token', data.token);
-      localStorage.setItem('admin_email', data.email);
-      setAdminUser({ email: data.email });
+      localStorage.setItem('admin_token', token);
+      localStorage.setItem('admin_email', cleanEmail);
+      setAdminUser({ email: cleanEmail });
       setAuthSuccessMsg(isRu ? 'Успешный вход в пульт управления!' : 'Successfully signed in safely!');
       
       // Load tables
@@ -375,18 +383,27 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
 
     setEmailAuthLoading(true);
     try {
-      const response = await fetch(getApiUrl('/api/admin/register'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: emailInput.trim(),
-          password: passwordInput
-        })
-      });
+      const cleanEmail = emailInput.toLowerCase().trim();
       
-      const data = await safeParseResponse(response, isRu ? 'Не удалось зарегистрироваться' : 'Registration failed');
+      if (!isAuthorizedEmail(cleanEmail)) {
+        throw new Error(isRu 
+          ? `Регистрация разрешена исключительно официальным администраторам: ${AUTHORIZED_EMAILS.join(", ")}` 
+          : `Registration is exclusively allowed for official admins: ${AUTHORIZED_EMAILS.join(", ")}`);
+      }
+      
+      const userRef = doc(db, 'admins', cleanEmail);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        throw new Error(isRu ? "Email администратора уже зарегистрирован. Пожалуйста, войдите в систему." : "Admin email already registered. Please sign in instead.");
+      }
+
+      const hash = await hashPassword(passwordInput);
+      
+      await setDoc(userRef, {
+        email: cleanEmail,
+        passwordHash: hash,
+        createdAt: serverTimestamp(),
+      });
       
       setAuthSuccessMsg(isRu
         ? 'Учетная запись создана! Введите ваш логин/пароль повторно и нажмите кнопку ВОЙТИ.'
@@ -403,12 +420,10 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('admin_token');
-      await fetch(getApiUrl('/api/admin/logout'), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }).catch(() => {});
+      if (token) {
+        const sessionRef = doc(db, 'admin_sessions', token);
+        await deleteDoc(sessionRef).catch(() => {});
+      }
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
@@ -427,18 +442,8 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
     
     try {
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch(getApiUrl(`/api/admin/submissions/${id}`), {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('API failed deleting submission');
-      }
-      
+      const ref = doc(db, 'submissions', id);
+      await deleteDoc(ref);
       setSubmissions(prev => prev.filter(sub => sub.id !== id));
       if (selectedSubmission?.id === id) {
         setSelectedSubmission(null);

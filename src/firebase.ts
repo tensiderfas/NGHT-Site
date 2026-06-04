@@ -14,7 +14,9 @@ const resolvedConfig = {
 };
 
 const app = initializeApp(resolvedConfig);
-export const db = getFirestore(app); /* Uses correct active database */
+export const db = (firebaseConfig as any).firestoreDatabaseId 
+  ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId)
+  : getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
