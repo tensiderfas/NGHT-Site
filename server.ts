@@ -92,7 +92,12 @@ async function startServer() {
     });
   });
 
-  const AUTHORIZED_EMAILS = ["ggg274415@gmail.com", "kajdaila17@gmail.com"];
+  const AUTHORIZED_EMAILS = [
+    "ggg274415@gmail.com", 
+    "kajdaila17@gmail.com",
+    "ilakajda45@gmail.com",
+    "nightvolt@internet.ru"
+  ];
 
   // Helper function to hash passwords safely
   function hashPassword(password: string): string {

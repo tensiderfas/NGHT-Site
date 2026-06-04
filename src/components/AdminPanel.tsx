@@ -59,7 +59,12 @@ interface Submission {
   activeJobTitleRu?: string;
 }
 
-const AUTHORIZED_EMAILS = ['ggg274415@gmail.com', 'kajdaila17@gmail.com'];
+const AUTHORIZED_EMAILS = [
+  'ggg274415@gmail.com', 
+  'kajdaila17@gmail.com',
+  'ilakajda45@gmail.com',
+  'nightvolt@internet.ru'
+];
 const isAuthorizedEmail = (email: string | null | undefined): boolean => {
   if (!email) return false;
   return AUTHORIZED_EMAILS.includes(email.toLowerCase().trim());
