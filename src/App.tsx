@@ -22,6 +22,14 @@ import PartnersTeaser from './components/PartnersTeaser';
 export default function App() {
   const [siteLoaded, setSiteLoaded] = useState(false);
   const [lang, setLang] = useState<'RU' | 'EN'>('RU');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = localStorage.getItem('theme');
+      return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
   const [viewTerms, setViewTerms] = useState(false);
   const [activeLegalTab, setActiveLegalTab] = useState<'terms' | 'platform' | 'agreement' | 'privacy' | 'dmca'>('terms');
   const [viewPromoTools, setViewPromoTools] = useState(false);
@@ -29,6 +37,25 @@ export default function App() {
   const [viewVacancies, setViewVacancies] = useState(false);
   const [viewAdmin, setViewAdmin] = useState(false);
   const [viewPartners, setViewPartners] = useState(false);
+
+  // Sync state with DOM element of html
+  useEffect(() => {
+    try {
+      const root = window.document.documentElement;
+      if (theme === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      localStorage.setItem('theme', theme);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   // Listen for hash-based hidden routing
   useEffect(() => {
@@ -131,7 +158,7 @@ export default function App() {
   }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewAdmin, viewPartners]);
 
   return (
-    <div id="site-root-container" className="min-h-screen bg-[#fafafc] relative overflow-x-hidden selection:bg-brand-blue selection:text-white">
+    <div id="site-root-container" className={`min-h-screen relative overflow-x-hidden transition-colors duration-500 selection:bg-brand-blue selection:text-white ${theme === 'dark' ? 'dark bg-[#0c0d0e] text-neutral-100' : 'bg-[#fafafc] text-neutral-800'}`}>
       
       {/* VHS Background Noise & Scanline simulation overlays */}
       <div className="vhs-bg-grain" />
@@ -162,6 +189,8 @@ export default function App() {
             <Navbar 
               lang={lang} 
               onToggleLang={handleToggleLang} 
+              theme={theme}
+              onToggleTheme={handleToggleTheme}
               onScrollTo={handleScrollTo} 
               onNavigateToTerms={handleNavigateToTerms}
               onNavigateToPromo={handleNavigateToPromo}

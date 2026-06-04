@@ -78,10 +78,10 @@ export default function Hero({ lang, onScrollTo }: HeroProps) {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 bg-neutral-50/80 border border-neutral-200 rounded-full font-mono text-[9px] font-bold tracking-[0.25em] text-neutral-600 uppercase"
+            className="inline-flex items-center gap-2 px-4 py-1.5 bg-neutral-50/80 border border-neutral-200 rounded-full font-mono text-[9px] font-bold tracking-[0.25em] text-neutral-600 dark:bg-neutral-900/60 dark:border-neutral-800 dark:text-neutral-400 uppercase"
           >
             <Sparkles className="w-3.5 h-3.5 text-brand-orange fill-brand-orange animate-pulse" />
-            <span className="text-neutral-800">{t.labelBadge}</span>
+            <span className="text-neutral-800 dark:text-neutral-200">{t.labelBadge}</span>
           </motion.div>
 
           {/* Glitch heading (lags and unlags, with manual preview trigger on hover) */}
@@ -172,7 +172,7 @@ export default function Hero({ lang, onScrollTo }: HeroProps) {
           >
             <button
               onClick={() => onScrollTo('#submit-demo')}
-              className="px-8 py-3.5 bg-brand-blue text-white font-mono text-xs font-bold tracking-widest rounded-full hover:bg-neutral-900 transition-all duration-300 transform active:scale-97 cursor-pointer hover:shadow-xl hover:shadow-brand-blue/20 hover:-translate-y-0.5 flex items-center gap-2"
+              className="px-8 py-3.5 bg-brand-blue text-white font-mono text-xs font-bold tracking-widest rounded-full hover:bg-neutral-900 dark:hover:bg-white dark:hover:text-neutral-950 transition-all duration-300 transform active:scale-97 cursor-pointer hover:shadow-xl hover:shadow-brand-blue/20 hover:-translate-y-0.5 flex items-center gap-2"
             >
               <ArrowRight className="w-3.5 h-3.5 text-white" />
               <span>{t.sendDemo}</span>
@@ -180,7 +180,7 @@ export default function Hero({ lang, onScrollTo }: HeroProps) {
 
             <button
               onClick={() => onScrollTo('#philosophy')}
-              className="px-6 py-3 bg-transparent text-neutral-800 hover:text-brand-blue font-mono text-xs font-bold tracking-widest transition-all cursor-pointer relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-neutral-200 hover:after:bg-brand-blue uppercase font-bold"
+              className="px-6 py-3 bg-transparent text-neutral-800 dark:text-neutral-200 hover:text-brand-blue dark:hover:text-brand-orange font-mono text-xs font-bold tracking-widest transition-all cursor-pointer relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-neutral-200 dark:after:bg-neutral-800 hover:after:bg-brand-blue uppercase font-bold"
             >
               {t.philosophy}
             </button>
@@ -190,19 +190,19 @@ export default function Hero({ lang, onScrollTo }: HeroProps) {
       </div>
 
       {/* Roster splits overview */}
-      <div className="max-w-[1250px] mx-auto w-full z-10 border-t border-neutral-200/70 pt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mt-12">
+      <div className="max-w-[1250px] mx-auto w-full z-10 border-t border-neutral-200/70 dark:border-neutral-800/80 pt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mt-12">
         
         {/* Simple indicators */}
         <div className="flex flex-wrap gap-x-8 gap-y-3 font-mono text-[10px] tracking-wider text-neutral-500">
-          <span className="flex items-center gap-1.5 font-bold text-neutral-900 uppercase">
+          <span className="flex items-center gap-1.5 font-bold text-neutral-900 dark:text-neutral-200 uppercase">
             <CheckCircle2 className="w-3.5 h-3.5 text-brand-blue" />
             {isRu ? 'ЧЕСТНЫЙ СПЛИТ 80/20' : 'FAIR 80/20 SPLIT'}
           </span>
-          <span className="flex items-center gap-1.5 font-bold text-neutral-900 uppercase">
+          <span className="flex items-center gap-1.5 font-bold text-neutral-900 dark:text-neutral-200 uppercase">
             <ShieldCheck className="w-3.5 h-3.5 text-brand-orange" />
             {isRu ? 'ПРОЗРАЧНЫЕ УСЛОВИЯ СЛУЖБЫ' : 'TRANSPARENT VALUE ALLIANCE'}
           </span>
-          <span className="flex items-center gap-1.5 font-bold text-neutral-900 uppercase">
+          <span className="flex items-center gap-1.5 font-bold text-neutral-900 dark:text-neutral-200 uppercase">
             <CheckCircle2 className="w-3.5 h-3.5 text-brand-orange" />
             {isRu ? 'ОТПРАВКА НА ВСЕ ПЛОЩАДКИ' : 'COMPLETE STORES DELIVERY'}
           </span>
@@ -216,11 +216,11 @@ export default function Hero({ lang, onScrollTo }: HeroProps) {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[9px] tracking-wider text-neutral-400 uppercase">{t.supplyDesc}</span>
-            <span className="text-xs font-black tracking-widest text-neutral-900">{t.supplyChannels}</span>
+            <span className="text-xs font-black tracking-widest text-neutral-900 dark:text-neutral-200">{t.supplyChannels}</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[9px] tracking-wider text-neutral-400 uppercase">{t.deliveryDesc}</span>
-            <span className="text-xs font-black tracking-widest text-neutral-900">{t.deliverySpeed}</span>
+            <span className="text-xs font-black tracking-widest text-neutral-900 dark:text-neutral-200">{t.deliverySpeed}</span>
           </div>
         </div>
 

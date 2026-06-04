@@ -89,6 +89,32 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadedLogoName, setUploadedLogoName] = useState('');
 
+  const safeParseResponse = async (response: Response, defaultErrorText: string) => {
+    let text = '';
+    try {
+      text = await response.text();
+    } catch (e) {
+      throw new Error(`${defaultErrorText} (Could not read response: ${e instanceof Error ? e.message : String(e)})`);
+    }
+
+    try {
+      const data = JSON.parse(text);
+      if (!response.ok) {
+        throw new Error(data.error || defaultErrorText);
+      }
+      return data;
+    } catch (e: any) {
+      if (!response.ok) {
+        const cleanSnippet = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+        throw new Error(`${defaultErrorText} (Status ${response.status}): ${cleanSnippet || 'HTML response'}`);
+      }
+      throw new Error(isRu 
+        ? `Ошибка при расшифровке ответа сервера: ${e.message || String(e)}` 
+        : `Failed to decode server response: ${e.message || String(e)}`
+      );
+    }
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -101,33 +127,38 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       reader.onloadend = async () => {
         const base64String = reader.result as string;
         
-        const response = await fetch('/api/upload-logo', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            filename: file.name,
-            base64: base64String,
-          }),
-        });
+        try {
+          const response = await fetch('/api/upload-logo', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              filename: file.name,
+              base64: base64String,
+            }),
+          });
 
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-          setPartnerForm(prev => ({ ...prev, logoUrl: data.url }));
-          setUploadedLogoName(file.name);
-          setPartnerMsg(isRu 
-            ? `Логотип "${file.name}" загружен и автоматически сопоставлен на диске!` 
-            : `Logo "${file.name}" successfully uploaded and mapped on disk!`
-          );
-        } else {
-          setPartnerMsg(isRu 
-            ? `Ошибка загрузки логотипа: ${data.error || 'Неизвестная ошибка'}` 
-            : `Failed uploading logo: ${data.error || 'Unknown error'}`
-          );
+          const data = await safeParseResponse(response, isRu ? 'Ошибка загрузки логотипа' : 'Failed uploading logo');
+          
+          if (data.success) {
+            setPartnerForm(prev => ({ ...prev, logoUrl: data.url }));
+            setUploadedLogoName(file.name);
+            setPartnerMsg(isRu 
+              ? `Логотип "${file.name}" загружен и автоматически сопоставлен на диске!` 
+              : `Logo "${file.name}" successfully uploaded and mapped on disk!`
+            );
+          } else {
+            setPartnerMsg(isRu 
+              ? `Ошибка загрузки логотипа: ${data.error || 'Неизвестная ошибка'}` 
+              : `Failed uploading logo: ${data.error || 'Unknown error'}`
+            );
+          }
+        } catch (uploadErr: any) {
+          setPartnerMsg(uploadErr.message || (isRu ? 'Ошибка отправки логотипа.' : 'Error sending logo.'));
+        } finally {
+          setUploadingLogo(false);
         }
-        setUploadingLogo(false);
       };
       reader.onerror = () => {
         setPartnerMsg(isRu ? 'Ошибка чтения файла.' : 'Error reading file.');
@@ -244,10 +275,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
         body: JSON.stringify(partnerForm)
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed saving partner');
-      }
+      const data = await safeParseResponse(response, isRu ? 'Не удалось сохранить партнера' : 'Failed to save partner');
 
       setPartnerForm({
         name: '',
@@ -312,10 +340,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
         })
       });
       
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
+      const data = await safeParseResponse(response, isRu ? 'Не удалось войти' : 'Login failed');
 
       localStorage.setItem('admin_token', data.token);
       localStorage.setItem('admin_email', data.email);
@@ -360,10 +385,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
         })
       });
       
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
+      const data = await safeParseResponse(response, isRu ? 'Не удалось зарегистрироваться' : 'Registration failed');
       
       setAuthSuccessMsg(isRu
         ? 'Учетная запись создана! Введите ваш логин/пароль повторно и нажмите кнопку ВОЙТИ.'
