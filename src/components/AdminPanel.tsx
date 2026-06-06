@@ -92,7 +92,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
 
   // Partners Management States
-  const [activeTab, setActiveTab] = useState<'candidates' | 'partners'>('candidates');
+  const [activeTab, setActiveTab] = useState<'candidates' | 'partners' | 'artists'>('candidates');
   const [partners, setPartners] = useState<any[]>([]);
   const [loadingPartners, setLoadingPartners] = useState(false);
   const [partnerForm, setPartnerForm] = useState({
@@ -105,6 +105,21 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   });
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadedLogoName, setUploadedLogoName] = useState('');
+
+  // Artists Management States
+  const [artists, setArtists] = useState<any[]>([]);
+  const [loadingArtists, setLoadingArtists] = useState(false);
+  const [artistsMsg, setArtistsMsg] = useState('');
+  const [artistSubmitting, setArtistSubmitting] = useState(false);
+  const [uploadingArtistImage, setUploadingArtistImage] = useState(false);
+  const [uploadedArtistImageName, setUploadedArtistImageName] = useState('');
+  const [artistForm, setArtistForm] = useState({
+    id: '',
+    name: '',
+    imageUrl: '',
+    socialUrl: '',
+    order: ''
+  });
 
   // Helper to hash passwords securely using standard WebCrypto API in the browser
   const hashPassword = async (password: string): Promise<string> => {
@@ -151,6 +166,42 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
+  const handleArtistImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingArtistImage(true);
+    setArtistsMsg('');
+    
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        try {
+          setArtistForm(prev => ({ ...prev, imageUrl: base64String }));
+          setUploadedArtistImageName(file.name);
+          setArtistsMsg(isRu 
+            ? `Изображение "${file.name}" успешно загружено!` 
+            : `Image "${file.name}" successfully loaded!`
+          );
+        } catch (uploadErr: any) {
+          setArtistsMsg(uploadErr.message || (isRu ? 'Ошибка обработки изображения.' : 'Error processing image.'));
+        } finally {
+          setUploadingArtistImage(false);
+        }
+      };
+      reader.onerror = () => {
+        setArtistsMsg(isRu ? 'Ошибка чтения файла.' : 'Error reading file.');
+        setUploadingArtistImage(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error(err);
+      setArtistsMsg(isRu ? 'Не удалось прочитать загруженный файл.' : 'Failed reading uploaded file.');
+      setUploadingArtistImage(false);
+    }
+  };
+
   const [partnerSubmitting, setPartnerSubmitting] = useState(false);
   const [partnerMsg, setPartnerMsg] = useState('');
 
@@ -168,6 +219,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
               setAdminUser({ email: data.email });
               fetchSubmissions();
               fetchPartners();
+              fetchArtists();
             } else {
               deleteDoc(sessionRef).catch(() => {});
               localStorage.removeItem('admin_token');
@@ -319,6 +371,92 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     }
   };
 
+  // Fetch Artists List from Firestore directly
+  const fetchArtists = async () => {
+    setLoadingArtists(true);
+    try {
+      const artistsRef = collection(db, 'artists');
+      const q = query(artistsRef, orderBy('order', 'asc'));
+      const querySnapshot = await getDocs(q);
+      
+      const loaded: any[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        loaded.push({
+          id: docSnap.id,
+          ...data,
+          createdAt: data.createdAt ? data.createdAt : null,
+        });
+      });
+      setArtists(loaded);
+    } catch (err) {
+      console.error('Error fetching artists from backend:', err);
+    } finally {
+      setLoadingArtists(false);
+    }
+  };
+
+  // Handle addition of a new secure Artist document directly or update
+  const handleAddArtist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!artistForm.name.trim() || !artistForm.imageUrl.trim()) {
+      setArtistsMsg(isRu ? 'Пожалуйста, заполните имя артиста и добавьте его обложку/изображение.' : 'Please enter the artist name and upload an image.');
+      return;
+    }
+
+    setArtistSubmitting(true);
+    setArtistsMsg('');
+    try {
+      const artistsRef = collection(db, 'artists');
+      const docId = artistForm.id || doc(artistsRef).id;
+      const ref = doc(db, 'artists', docId);
+      
+      const numericOrder = Number(artistForm.order) || 0;
+      
+      await setDoc(ref, {
+        id: docId,
+        name: artistForm.name.trim(),
+        imageUrl: artistForm.imageUrl.trim(),
+        socialUrl: artistForm.socialUrl?.trim() || "",
+        order: numericOrder,
+        createdAt: serverTimestamp(),
+      });
+
+      setArtistForm({
+        id: '',
+        name: '',
+        imageUrl: '',
+        socialUrl: '',
+        order: ''
+      });
+      setUploadedArtistImageName('');
+      setArtistsMsg(isRu ? 'Артист успешно сохранен!' : 'Artist successfully saved!');
+      fetchArtists();
+    } catch (err: any) {
+      console.error('Error creating artist document:', err);
+      setArtistsMsg(isRu ? `Ошибка при добавлении в базу данных: ${err.message}` : `Failed saving to Cloud Firestore: ${err.message}`);
+    } finally {
+      setArtistSubmitting(false);
+    }
+  };
+
+  // Handle deletion of an Artist document directly
+  const handleDeleteArtist = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(isRu ? 'Вы уверены, что хотите удалить этого артиста?' : 'Are you sure you want to delete this artist?')) {
+      return;
+    }
+
+    try {
+      const ref = doc(db, 'artists', id);
+      await deleteDoc(ref);
+      setArtists(prev => prev.filter(a => a.id !== id));
+    } catch (err) {
+      console.error('Error deleting artist document:', err);
+      alert(isRu ? 'Не удалось удалить запись' : 'Failed to delete record');
+    }
+  };
+
   const handleEmailPasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -364,6 +502,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       // Load tables
       fetchSubmissions();
       fetchPartners();
+      fetchArtists();
     } catch (err: any) {
       console.error('Email password login error:', err);
       setAuthError(err.message || (isRu 
@@ -644,7 +783,11 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                   <span>{isRu ? "СЕССИЯ АДМИНИСТРАТОРА" : "ADMIN ACTIVE SECTOR"}</span>
                 </div>
                 <h1 className="text-3xl md:text-5xl font-display font-black text-neutral-950 uppercase tracking-tight">
-                  {activeTab === 'candidates' ? (isRu ? "БАЗА КАНДИДАТОВ" : "CANDIDATES DATABASE") : (isRu ? "ПАРТНЕРСКАЯ СЕТЬ" : "PARTNERS NETWORK")}
+                  {activeTab === 'candidates' 
+                    ? (isRu ? "БАЗА КАНДИДАТОВ" : "CANDIDATES DATABASE") 
+                    : activeTab === 'partners' 
+                      ? (isRu ? "ПАРТНЕРСКАЯ СЕТЬ" : "PARTNERS NETWORK")
+                      : (isRu ? "НАШИ АРТИСТЫ" : "OUR ARTISTS")}
                 </h1>
                 <p className="text-xs font-mono text-neutral-400 uppercase tracking-wider mt-1">
                   CURRENT USER: <span className="text-brand-blue font-bold">{adminUser?.email}</span>
@@ -674,14 +817,30 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                   >
                     {isRu ? 'Партнеры' : 'Partners'}
                   </button>
+                  <button
+                    onClick={() => setActiveTab('artists')}
+                    className={`py-1.5 px-3.5 rounded-lg text-xs font-mono font-bold tracking-wide uppercase transition-all duration-300 cursor-pointer ${
+                      activeTab === 'artists'
+                        ? 'bg-neutral-950 text-white shadow-xs'
+                        : 'text-neutral-500 hover:text-neutral-950'
+                    }`}
+                  >
+                    {isRu ? 'Артисты' : 'Artists'}
+                  </button>
                 </div>
 
                 <button
-                  onClick={activeTab === 'candidates' ? fetchSubmissions : fetchPartners}
-                  disabled={loadingData || loadingPartners}
-                  className="flex items-center gap-2 px-4 py-2 bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wide uppercase hover:bg-neutral-900 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
+                  onClick={
+                    activeTab === 'candidates' 
+                      ? fetchSubmissions 
+                      : activeTab === 'partners' 
+                        ? fetchPartners 
+                        : fetchArtists
+                  }
+                  disabled={loadingData || loadingPartners || loadingArtists}
+                  className="flex items-center gap-2 px-4 py-2 bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wide uppercase hover:bg-neutral-950 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${(loadingData || loadingPartners) ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 ${(loadingData || loadingPartners || loadingArtists) ? 'animate-spin' : ''}`} />
                   <span>{isRu ? "ОБНОВИТЬ" : "REFRESH"}</span>
                 </button>
               </div>
@@ -987,7 +1146,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
 
             </div>
           </>
-        ) : (
+        ) : activeTab === 'partners' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Left Side: Create Partner Form */}
@@ -1206,6 +1365,240 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                       <div className="flex items-center">
                         <button
                           onClick={(e) => handleDeletePartner(partner.id, e)}
+                          className="p-1 px-1.5 opacity-100 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white rounded-lg transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+          </div>
+        ) : (
+          /* activeTab === 'artists' */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {/* Left Side: Create/Edit Artist Form */}
+            <div className="col-span-12 lg:col-span-5 bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm space-y-6">
+              <div className="border-b border-neutral-100 pb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#e1222e]" />
+                  <h3 className="font-mono text-[10px] tracking-widest text-[#7e8c9c] font-black uppercase text-left">
+                    {artistForm.id 
+                      ? (isRu ? "РЕДАКТИРОВАТЬ ДАННЫЕ АРТИСТА" : "EDIT ARTIST CREDENTIALS") 
+                      : (isRu ? "ДОБАВИТЬ НОВОГО АРТИСТА" : "REGISTER NEW ARTIST")}
+                  </h3>
+                </div>
+                {artistForm.id && (
+                  <button
+                    onClick={() => {
+                      setArtistForm({ id: '', name: '', imageUrl: '', socialUrl: '', order: '' });
+                      setUploadedArtistImageName('');
+                    }}
+                    className="text-[9px] font-mono hover:text-[#e1222e] uppercase font-bold tracking-wider"
+                  >
+                    [{isRu ? "Отмена" : "Cancel"}]
+                  </button>
+                )}
+              </div>
+
+              {artistsMsg && (
+                <div className={`p-4 rounded-xl text-xs text-left ${
+                  artistsMsg.includes('успешно') || artistsMsg.includes('successfully')
+                    ? 'bg-emerald-50 border border-emerald-200/60 text-emerald-700'
+                    : 'bg-rose-50 border border-rose-200/60 text-rose-600'
+                }`}>
+                  {artistsMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleAddArtist} className="space-y-4">
+                {/* Name */}
+                <div className="space-y-1.5 text-left">
+                  <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                    {isRu ? "Имя / Псевдоним артиста *" : "Artist Name / Alias *"}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. NIGHTVOLT"
+                    className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all"
+                    value={artistForm.name}
+                    onChange={(e) => setArtistForm(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+
+                {/* Social URL link */}
+                <div className="space-y-1.5 text-left">
+                  <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                    {isRu ? "Ссылка на карточку / соцсеть (VK, Spotify, Yandex) (Необязательно)" : "Social / Yandex / Spotify link (Optional)"}
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://vk.com/nightvolt"
+                    className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all"
+                    value={artistForm.socialUrl}
+                    onChange={(e) => setArtistForm(prev => ({ ...prev, socialUrl: e.target.value }))}
+                  />
+                </div>
+
+                {/* Display Order */}
+                <div className="space-y-1.5 text-left">
+                  <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                    {isRu ? "Порядок сортировки (По возрастанию) *" : "Sorting Order Position (Ascending) *"}
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 1, 2, 3"
+                    className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2.5 text-xs text-neutral-800 focus:outline-none transition-all"
+                    value={artistForm.order}
+                    onChange={(e) => setArtistForm(prev => ({ ...prev, order: e.target.value }))}
+                  />
+                </div>
+
+                {/* Photo Upload */}
+                <div className="space-y-1.5 text-left">
+                  <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                    {isRu ? "Фото артиста *" : "Artist Portrait Image *"}
+                  </label>
+                  <div className="relative border-2 border-dashed border-neutral-200 hover:border-brand-orange rounded-xl p-4 text-center transition-colors bg-neutral-50/50 hover:bg-white cursor-pointer group">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleArtistImageUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className="space-y-1 pointer-events-none">
+                      <div className="flex items-center justify-center text-neutral-400 group-hover:text-brand-orange transition-colors">
+                        {uploadingArtistImage ? (
+                          <div className="w-5 h-5 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Sparkles className="w-5 h-5 text-neutral-400 group-hover:animate-bounce" />
+                        )}
+                      </div>
+                      <p className="text-xs font-bold text-neutral-800">
+                        {uploadingArtistImage 
+                          ? (isRu ? "Загрузка файла..." : "Uploading image file...")
+                          : artistForm.imageUrl 
+                          ? (isRu ? "Изображение успешно выбрано ✨" : "Image selected successfully ✨")
+                          : (isRu ? 'Выберите изображение PNG/JPG/JPEG' : 'Choose PNG/JPG/JPEG Image')
+                        }
+                      </p>
+                      <p className="text-[10px] text-neutral-500 font-mono">
+                        {artistForm.imageUrl 
+                          ? (uploadedArtistImageName || (isRu ? "Сгенерировано или сохранено" : "Loaded Image URL link")) 
+                          : (isRu ? 'Перетащите файл сюда или нажмите' : 'Drag & drop or click to choose file')
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  {artistForm.imageUrl && (
+                    <div className="mt-2 text-left">
+                      <p className="font-mono text-[8px] text-neutral-400 uppercase tracking-widest">{isRu ? "Предпросмотр:" : "Preview thumbnail:"}</p>
+                      <img 
+                        src={artistForm.imageUrl} 
+                        alt="Preview" 
+                        referrerPolicy="no-referrer"
+                        className="w-24 h-24 object-cover rounded-xl mt-1 border border-neutral-200" 
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={artistSubmitting}
+                  className="w-full py-3 bg-[#e1222e] hover:bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all duration-300 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {artistSubmitting ? (isRu ? 'СОХРАНЕНИЕ...' : 'SAVING...') : (isRu ? 'СОХРАНИТЬ АРТИСТА' : 'SAVE ARTIST')}
+                </button>
+              </form>
+            </div>
+
+            {/* Right Side: Active Database Artists */}
+            <div className="col-span-12 lg:col-span-7 bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm space-y-4">
+              <div className="border-b border-neutral-100 pb-3 flex items-center justify-between">
+                <span className="font-mono text-[10px] tracking-widest text-[#7e8c9c] font-black uppercase flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-[#e1222e]" />
+                  {isRu ? "АКТИВНЫЕ АРТИСТЫ В БД" : "DATABASE ARTISTS LOG"}
+                </span>
+                <button 
+                  onClick={fetchArtists}
+                  disabled={loadingArtists}
+                  className="p-1 text-neutral-400 hover:text-brand-orange transition-colors"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingArtists ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              <div className="space-y-4 max-h-[580px] overflow-y-auto pr-1">
+                {/* Dynamic Artists fetch list */}
+                {loadingArtists ? (
+                  <div className="py-8 text-center text-xs font-mono text-neutral-400 animate-pulse">
+                    {isRu ? 'ЗАГРУЗКА АРТИСТОВ...' : 'FETCHING CLOUD ARTISTS...'}
+                  </div>
+                ) : artists.length === 0 ? (
+                  <div className="py-8 text-center font-mono text-[11px] text-neutral-400 border border-dashed border-neutral-200 rounded-2xl">
+                    {isRu ? 'НЕТ ДОБАВЛЕННЫХ АРТИСТОВ (ЗАГРУЗИТЕ В АДМИНКЕ)' : 'NO ARTISTS YET, ADD THEM VIA FORM'}
+                  </div>
+                ) : (
+                  artists.map((artist) => (
+                    <div 
+                      key={artist.id}
+                      className="p-4 bg-white border border-neutral-100 rounded-2xl flex justify-between gap-4 hover:border-neutral-200 transition-colors"
+                    >
+                      <div className="flex gap-4 text-left flex-1 min-w-0">
+                        {artist.imageUrl && (
+                          <img 
+                            src={artist.imageUrl} 
+                            alt={artist.name} 
+                            referrerPolicy="no-referrer"
+                            className="w-12 h-12 object-cover rounded-xl border border-neutral-150 shrink-0" 
+                          />
+                        )}
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-display font-bold text-sm text-neutral-900 truncate">{artist.name}</h4>
+                            <span className="text-[8px] font-mono bg-neutral-100 text-neutral-500 px-1.5 rounded uppercase font-bold">
+                              Pos #{artist.order}
+                            </span>
+                          </div>
+                          {artist.socialUrl && (
+                            <a 
+                              href={artist.socialUrl} 
+                              target="_blank"  
+                              rel="noreferrer"
+                              className="text-neutral-400 hover:text-[#e1222e] text-[11px] font-mono flex items-center gap-1.5 truncate"
+                            >
+                              <ExternalLink className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{artist.socialUrl}</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setArtistForm({
+                              id: artist.id,
+                              name: artist.name,
+                              imageUrl: artist.imageUrl,
+                              socialUrl: artist.socialUrl || '',
+                              order: String(artist.order ?? 0)
+                            });
+                            setUploadedArtistImageName(isRu ? 'Секция редактирования' : 'Edit Mode Image');
+                          }}
+                          className="p-1 px-1.5 bg-neutral-100 hover:bg-neutral-950 text-neutral-600 hover:text-white rounded-lg transition-all cursor-pointer font-mono text-[10px] uppercase font-bold"
+                        >
+                          {isRu ? "Редакт." : "Edit"}
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteArtist(artist.id, e)}
                           className="p-1 px-1.5 opacity-100 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white rounded-lg transition-all cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

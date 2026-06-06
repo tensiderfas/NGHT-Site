@@ -18,6 +18,8 @@ import Vacancies from './components/Vacancies';
 import AdminPanel from './components/AdminPanel';
 import Partners from './components/Partners';
 import PartnersTeaser from './components/PartnersTeaser';
+import ArtistsPage from './components/ArtistsPage';
+import ArtistsTeaser from './components/ArtistsTeaser';
 
 export default function App() {
   const [siteLoaded, setSiteLoaded] = useState(false);
@@ -37,6 +39,7 @@ export default function App() {
   const [viewVacancies, setViewVacancies] = useState(false);
   const [viewAdmin, setViewAdmin] = useState(false);
   const [viewPartners, setViewPartners] = useState(false);
+  const [viewArtists, setViewArtists] = useState(false);
 
   // Sync state with DOM element of html
   useEffect(() => {
@@ -68,6 +71,7 @@ export default function App() {
         setViewAbout(false);
         setViewVacancies(false);
         setViewPartners(false);
+        setViewArtists(false);
       } else if (hash === '' || hash === '#') {
         setViewAdmin(false);
       }
@@ -85,6 +89,7 @@ export default function App() {
     setViewAbout(false);
     setViewVacancies(false);
     setViewPartners(false);
+    setViewArtists(false);
   };
 
   const handleNavigateToPromo = () => {
@@ -93,6 +98,7 @@ export default function App() {
     setViewAbout(false);
     setViewVacancies(false);
     setViewPartners(false);
+    setViewArtists(false);
   };
 
   const handleNavigateToAbout = () => {
@@ -101,6 +107,7 @@ export default function App() {
     setViewPromoTools(false);
     setViewVacancies(false);
     setViewPartners(false);
+    setViewArtists(false);
   };
 
   const handleNavigateToVacancies = () => {
@@ -109,6 +116,7 @@ export default function App() {
     setViewPromoTools(false);
     setViewAbout(false);
     setViewPartners(false);
+    setViewArtists(false);
   };
 
   const handleNavigateToPartners = () => {
@@ -117,17 +125,28 @@ export default function App() {
     setViewPromoTools(false);
     setViewAbout(false);
     setViewVacancies(false);
+    setViewArtists(false);
+  };
+
+  const handleNavigateToArtists = () => {
+    setViewArtists(true);
+    setViewTerms(false);
+    setViewPromoTools(false);
+    setViewAbout(false);
+    setViewVacancies(false);
+    setViewPartners(false);
   };
 
             {/* Global smooth navigation scroll assistance */}
   const handleScrollTo = (selector: string) => {
-    if (viewTerms || viewPromoTools || viewAbout || viewVacancies || viewAdmin || viewPartners) {
+    if (viewTerms || viewPromoTools || viewAbout || viewVacancies || viewAdmin || viewPartners || viewArtists) {
       setViewTerms(false);
       setViewPromoTools(false);
       setViewAbout(false);
       setViewVacancies(false);
       setViewAdmin(false);
       setViewPartners(false);
+      setViewArtists(false);
       window.location.hash = '';
       // Wait minor duration for component unmount/mount to complete, then slide
       setTimeout(() => {
@@ -155,7 +174,7 @@ export default function App() {
   // Auto scroll to top when changing sub-views or active tab
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewAdmin, viewPartners]);
+  }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewAdmin, viewPartners, viewArtists]);
 
   return (
     <div id="site-root-container" className={`min-h-screen relative overflow-x-hidden transition-colors duration-500 selection:bg-brand-blue selection:text-white ${theme === 'dark' ? 'dark bg-[#0c0d0e] text-neutral-100' : 'bg-[#fafafc] text-neutral-800'}`}>
@@ -197,6 +216,7 @@ export default function App() {
               onNavigateToAbout={handleNavigateToAbout}
               onNavigateToVacancies={handleNavigateToVacancies}
               onNavigateToPartners={handleNavigateToPartners}
+              onNavigateToArtists={handleNavigateToArtists}
             />
 
             {/* Structured Page Content routing */}
@@ -284,6 +304,19 @@ export default function App() {
                       onBack={() => setViewPartners(false)} 
                     />
                   </motion.div>
+                ) : viewArtists ? (
+                  <motion.div
+                    key="artists-subpage"
+                    initial={{ opacity: 0, scale: 0.99, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: -20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <ArtistsPage 
+                      lang={lang} 
+                      onBack={() => setViewArtists(false)} 
+                    />
+                  </motion.div>
                 ) : (
                   <motion.div
                     key="home-mainpage"
@@ -307,6 +340,9 @@ export default function App() {
                     {/* Immersive Biography, Foundations and Team Board Teaser Grid */}
                     <AboutTeaser lang={lang} onReadFull={handleNavigateToAbout} />
                     
+                    {/* Curated artists roster block */}
+                    <ArtistsTeaser lang={lang} onViewAll={handleNavigateToArtists} />
+                    
                     {/* Label partners teaser showcasing Media Vision Group */}
                     <PartnersTeaser lang={lang} onViewAll={handleNavigateToPartners} />
                     
@@ -329,6 +365,7 @@ export default function App() {
               onNavigateToAbout={handleNavigateToAbout}
               onNavigateToVacancies={handleNavigateToVacancies}
               onNavigateToPartners={handleNavigateToPartners}
+              onNavigateToArtists={handleNavigateToArtists}
             />
 
           </motion.div>

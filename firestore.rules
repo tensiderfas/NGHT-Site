@@ -11,6 +11,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Artists: public read, write for admin/backend
+    match /artists/{artistId} {
+      allow read, write: if true;
+    }
+
     // Admins and Sessions: custom secure collections managed by our Express authentication server
     match /admins/{adminId} {
       allow read, write: if true;

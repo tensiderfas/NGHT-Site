@@ -11,9 +11,10 @@ interface FooterProps {
   onNavigateToAbout?: () => void;
   onNavigateToVacancies?: () => void;
   onNavigateToPartners?: () => void;
+  onNavigateToArtists?: () => void;
 }
 
-export default function Footer({ lang, onScrollTo, onNavigateToTerms, onNavigateToPromo, onNavigateToAbout, onNavigateToVacancies, onNavigateToPartners }: FooterProps) {
+export default function Footer({ lang, onScrollTo, onNavigateToTerms, onNavigateToPromo, onNavigateToAbout, onNavigateToVacancies, onNavigateToPartners, onNavigateToArtists }: FooterProps) {
   const currentYear = new Date().getFullYear();
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const isRu = lang === 'RU';
@@ -174,6 +175,18 @@ export default function Footer({ lang, onScrollTo, onNavigateToTerms, onNavigate
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse" />
                 <span>{isRu ? "Партнеры" : "Partners"}</span>
+                <ArrowRight className="w-3 h-3 text-brand-orange shrink-0" />
+              </button>
+            )}
+
+            {/* Artists link */}
+            {onNavigateToArtists && (
+              <button
+                onClick={() => onNavigateToArtists()}
+                className="text-xs text-[#7e8c9c] hover:text-brand-orange hover:translate-x-1 transition-all duration-300 text-left cursor-pointer inline-flex items-center gap-1.5 pt-1 uppercase select-none font-bold"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#e1222e] animate-pulse" />
+                <span>{isRu ? "Наши артисты" : "Our Artists"}</span>
                 <ArrowRight className="w-3 h-3 text-brand-orange shrink-0" />
               </button>
             )}

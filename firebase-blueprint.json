@@ -34,6 +34,20 @@
         "websiteUrl": { "type": "string" }
       },
       "required": ["id", "createdAt", "name", "descriptionRu", "descriptionEn"]
+    },
+    "artist": {
+      "title": "Artist",
+      "description": "Artist of the music label",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "name": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "socialUrl": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "createdAt", "name", "imageUrl"]
     }
   },
   "firestore": {
@@ -44,6 +58,10 @@
     "/partners/{partnerId}": {
       "schema": "partner",
       "description": "Collection of music label partners"
+    },
+    "/artists/{artistId}": {
+      "schema": "artist",
+      "description": "Collection of music label artists"
     }
   }
 }
