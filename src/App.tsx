@@ -60,94 +60,142 @@ export default function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Listen for hash-based hidden routing
+  // Routing parser helper for paths and subdomains
+  const getPageFromUrl = () => {
+    const path = window.location.pathname.toLowerCase();
+    const hostname = window.location.hostname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+
+    const isSubdomain = (sub: string) => hostname.startsWith(`${sub}.`);
+
+    if (path.startsWith('/admin') || hash === '#admin' || hash === '#nightvolt-admin' || isSubdomain('admin')) {
+      return { page: 'admin' as const, tab: '' };
+    }
+    if (path.startsWith('/artists') || path.startsWith('/artist') || isSubdomain('artists') || isSubdomain('artist')) {
+      return { page: 'artists' as const, tab: '' };
+    }
+    if (path.startsWith('/partners') || path.startsWith('/partner') || isSubdomain('partners') || isSubdomain('partner')) {
+      return { page: 'partners' as const, tab: '' };
+    }
+    if (path.startsWith('/vacancies') || path.startsWith('/vacancy') || path.startsWith('/careers') || isSubdomain('vacancies') || isSubdomain('careers')) {
+      return { page: 'vacancies' as const, tab: '' };
+    }
+    if (path.startsWith('/about') || isSubdomain('about')) {
+      return { page: 'about' as const, tab: '' };
+    }
+    if (path.startsWith('/promo') || path.startsWith('/marketing') || isSubdomain('promo') || isSubdomain('marketing')) {
+      return { page: 'promo' as const, tab: '' };
+    }
+    
+    // Legal subdivisions
+    if (path.startsWith('/platform')) {
+      return { page: 'terms' as const, tab: 'platform' };
+    }
+    if (path.startsWith('/agreement')) {
+      return { page: 'terms' as const, tab: 'agreement' };
+    }
+    if (path.startsWith('/privacy')) {
+      return { page: 'terms' as const, tab: 'privacy' };
+    }
+    if (path.startsWith('/dmca')) {
+      return { page: 'terms' as const, tab: 'dmca' };
+    }
+    if (path.startsWith('/terms')) {
+      return { page: 'terms' as const, tab: 'terms' };
+    }
+    
+    return { page: 'home' as const, tab: '' };
+  };
+
+  // Safe router navigation dispatcher
+  const navigate = (page: 'home' | 'admin' | 'artists' | 'partners' | 'vacancies' | 'about' | 'promo' | 'terms', tab: string = '') => {
+    let newPath = '/';
+    if (page === 'admin') newPath = '/admin';
+    else if (page === 'artists') newPath = '/artists';
+    else if (page === 'partners') newPath = '/partners';
+    else if (page === 'vacancies') newPath = '/vacancies';
+    else if (page === 'about') newPath = '/about';
+    else if (page === 'promo') newPath = '/promo';
+    else if (page === 'terms') {
+      if (tab && tab !== 'terms') {
+        newPath = `/${tab}`;
+      } else {
+        newPath = '/terms';
+      }
+    }
+
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({ page, tab }, '', newPath);
+    }
+
+    setViewAdmin(page === 'admin');
+    setViewArtists(page === 'artists');
+    setViewPartners(page === 'partners');
+    setViewVacancies(page === 'vacancies');
+    setViewAbout(page === 'about');
+    setViewPromoTools(page === 'promo');
+    setViewTerms(page === 'terms');
+    if (page === 'terms' && tab) {
+      setActiveLegalTab(tab as any);
+    }
+  };
+
+  // Keep state matching URL path & handle back/forward navigation
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash === '#admin' || hash === '#nightvolt-admin') {
-        setViewAdmin(true);
-        setViewTerms(false);
-        setViewPromoTools(false);
-        setViewAbout(false);
-        setViewVacancies(false);
-        setViewPartners(false);
-        setViewArtists(false);
-      } else if (hash === '' || hash === '#') {
-        setViewAdmin(false);
+    const handleUrlChange = () => {
+      const resolved = getPageFromUrl();
+      setViewAdmin(resolved.page === 'admin');
+      setViewArtists(resolved.page === 'artists');
+      setViewPartners(resolved.page === 'partners');
+      setViewVacancies(resolved.page === 'vacancies');
+      setViewAbout(resolved.page === 'about');
+      setViewPromoTools(resolved.page === 'promo');
+      setViewTerms(resolved.page === 'terms');
+      if (resolved.page === 'terms' && resolved.tab) {
+        setActiveLegalTab(resolved.tab as any);
       }
     };
 
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+    
+    // Process matching view instantly on mount
+    handleUrlChange();
+
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
+    };
   }, []);
 
   const handleNavigateToTerms = (tab: 'terms' | 'platform' | 'agreement' | 'privacy' | 'dmca' = 'terms') => {
-    setActiveLegalTab(tab);
-    setViewTerms(true);
-    setViewPromoTools(false);
-    setViewAbout(false);
-    setViewVacancies(false);
-    setViewPartners(false);
-    setViewArtists(false);
+    navigate('terms', tab);
   };
 
   const handleNavigateToPromo = () => {
-    setViewPromoTools(true);
-    setViewTerms(false);
-    setViewAbout(false);
-    setViewVacancies(false);
-    setViewPartners(false);
-    setViewArtists(false);
+    navigate('promo');
   };
 
   const handleNavigateToAbout = () => {
-    setViewAbout(true);
-    setViewTerms(false);
-    setViewPromoTools(false);
-    setViewVacancies(false);
-    setViewPartners(false);
-    setViewArtists(false);
+    navigate('about');
   };
 
   const handleNavigateToVacancies = () => {
-    setViewVacancies(true);
-    setViewTerms(false);
-    setViewPromoTools(false);
-    setViewAbout(false);
-    setViewPartners(false);
-    setViewArtists(false);
+    navigate('vacancies');
   };
 
   const handleNavigateToPartners = () => {
-    setViewPartners(true);
-    setViewTerms(false);
-    setViewPromoTools(false);
-    setViewAbout(false);
-    setViewVacancies(false);
-    setViewArtists(false);
+    navigate('partners');
   };
 
   const handleNavigateToArtists = () => {
-    setViewArtists(true);
-    setViewTerms(false);
-    setViewPromoTools(false);
-    setViewAbout(false);
-    setViewVacancies(false);
-    setViewPartners(false);
+    navigate('artists');
   };
 
             {/* Global smooth navigation scroll assistance */}
   const handleScrollTo = (selector: string) => {
     if (viewTerms || viewPromoTools || viewAbout || viewVacancies || viewAdmin || viewPartners || viewArtists) {
-      setViewTerms(false);
-      setViewPromoTools(false);
-      setViewAbout(false);
-      setViewVacancies(false);
-      setViewAdmin(false);
-      setViewPartners(false);
-      setViewArtists(false);
-      window.location.hash = '';
+      navigate('home');
       // Wait minor duration for component unmount/mount to complete, then slide
       setTimeout(() => {
         const targetElement = document.querySelector(selector);
@@ -232,10 +280,7 @@ export default function App() {
                   >
                     <AdminPanel 
                       lang={lang} 
-                      onClose={() => {
-                        window.location.hash = '';
-                        setViewAdmin(false);
-                      }} 
+                      onClose={() => navigate('home')} 
                     />
                   </motion.div>
                 ) : viewTerms ? (
@@ -248,7 +293,7 @@ export default function App() {
                   >
                     <DistributionTerms 
                       lang={lang} 
-                      onBack={() => setViewTerms(false)} 
+                      onBack={() => navigate('home')} 
                       initialTab={activeLegalTab}
                     />
                   </motion.div>
@@ -262,7 +307,7 @@ export default function App() {
                   >
                     <MarketingSuite 
                       lang={lang} 
-                      onBack={() => setViewPromoTools(false)} 
+                      onBack={() => navigate('home')} 
                     />
                   </motion.div>
                 ) : viewAbout ? (
@@ -275,7 +320,7 @@ export default function App() {
                   >
                     <AboutPlatform 
                       lang={lang} 
-                      onBack={() => setViewAbout(false)} 
+                      onBack={() => navigate('home')} 
                     />
                   </motion.div>
                 ) : viewVacancies ? (
@@ -288,7 +333,7 @@ export default function App() {
                   >
                     <Vacancies 
                       lang={lang} 
-                      onBack={() => setViewVacancies(false)} 
+                      onBack={() => navigate('home')} 
                     />
                   </motion.div>
                 ) : viewPartners ? (
@@ -301,7 +346,7 @@ export default function App() {
                   >
                     <Partners 
                       lang={lang} 
-                      onBack={() => setViewPartners(false)} 
+                      onBack={() => navigate('home')} 
                     />
                   </motion.div>
                 ) : viewArtists ? (
@@ -314,7 +359,7 @@ export default function App() {
                   >
                     <ArtistsPage 
                       lang={lang} 
-                      onBack={() => setViewArtists(false)} 
+                      onBack={() => navigate('home')} 
                     />
                   </motion.div>
                 ) : (
