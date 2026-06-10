@@ -1,6 +1,6 @@
 {
   "name": "NIGHTVOLT",
-  "description": "NIGHTVOLT",
+  "description": "Распространяйте свою музыку на всех платформах бесплатно с помощью эффективной дистрибуции",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
