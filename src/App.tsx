@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Philosophy from './components/Philosophy';
 import Services from './components/Services';
+import Pricing from './components/Pricing';
 import Specs from './components/Specs';
 import AboutPlatform from './components/AboutPlatform';
 import AboutTeaser from './components/AboutTeaser';
@@ -378,6 +379,9 @@ export default function App() {
                     
                     {/* Expanded 5-card Services and detail grid */}
                     <Services lang={lang} />
+                    
+                    {/* Flexible Tariffs and pricing plans */}
+                    <Pricing lang={lang} />
                     
                     {/* Operational system technical specs */}
                     <Specs lang={lang} />

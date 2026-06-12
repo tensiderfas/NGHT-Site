@@ -77,6 +77,7 @@ export default function Navbar({ lang, onToggleLang, theme, onToggleTheme, onScr
   const navLinks = [
     { label: t.philosophy, target: '#philosophy' },
     { label: t.services, target: '#services' },
+    { label: t.pricing, target: '#pricing' },
     { label: t.artists, target: '#artists' },
     { label: t.partners, target: '#partners' }
   ];

@@ -7,6 +7,7 @@ export const translations = {
     artists: "АРТИСТЫ",
     techSpec: "О ПЛАТФОРМЕ",
     partners: "ПАРТНЕРЫ",
+    pricing: "ТАРИФЫ",
     sendDemo: "ОТПРАВИТЬ ТРЕК",
     distTerms: "Условия дистрибуции",
     backToMain: "НА ГЛАВНУЮ",
@@ -127,6 +128,46 @@ export const translations = {
     faqBadge: "ОТВЕТЫ НА ВОПРОСЫ // FAQ",
     faqHeading: "ЧАСТО ЗАДАВАЕМЫЕ ВОПРОСЫ",
 
+    // Pricing Section
+    pricingBadge: "ТАРИФНЫЕ ПЛАНЫ",
+    pricingHeading: "ВЫБЕРИТЕ ПОДХОДЯЩИЙ ТАРИФ",
+    pricingSubtext: "// ПРОЗРАЧНАЯ СТОИМОСТЬ",
+    pricingBillingMonthly: "Ежемесячно",
+    pricingBillingYearly: "Ежегодно",
+    pricingSavePercent: "Скидка ~16%",
+    pricingPeriodMonth: "мес.",
+    pricingPeriodYear: "год",
+    pricingGetStarted: "Начать бесплатно",
+    pricingUpgrade: "Подключить тариф",
+
+    basicPlanTitle: "Базовый план",
+    basicPlanPrice: "Бесплатно",
+    basicPlanDesc: "Идеально для начинающих независимых артистов, выпускающих музыку на локальные площадки.",
+    basicPlanFeatures: [
+      "Стандартная дистрибуция (ВК Музыка, Яндекс Музыка, Звук)",
+      "Роялти-сплит 70/30 для новых пользователей (вы получаете 70%)",
+      "Поддержка стандартных аудиоформатов (WAV | FLAC)",
+      "Сроки доставки релиза: от 5 до 14 дней (рекомендуем подавать за 14 дней)",
+      "Бесплатное создание кодов ISRC и UPC"
+    ],
+
+    advPlanTitle: "Продвинутый план",
+    advPlanPriceDesc: "Полный безлимит возможностей",
+    advPlanFeatures: [
+      "Повышенный роялти-сплит 80/20 в пользу артиста (вы получаете 80%)",
+      "Дистрибуция во все страны мира (Spotify, Apple Music, TikTok, YouTube и др.)",
+      "Максимальная скорость доставки: по ситуации от 5 до 14 дней (рекомендуем за 14 дней подавать)",
+      "Добавление текста песни на площадки",
+      "Подача заявок на промо-поддержку в редакционные плейлисты стримингов",
+      "Ежедневная продвинутая аналитика в личном кабинете",
+      "Приоритетная поддержка артистов 24/7 (Telegram и чат)",
+      "Приоритетный вывод средств без задержек"
+    ],
+
+    extraServiceTitle: "Дополнительные услуги",
+    extraServiceLyricsSync: "Синхронизация текста",
+    extraServiceLyricsDesc: "Добавление динамических синхронизированных по времени текстов на стриминговые платформы (Яндекс.Музыка, VK, Apple Music и др.). Доступно для любого тарифного плана.",
+
     // Footer Text Info
     footerAbout: "Быстрое размещение музыки на площадках, автоматический учет прав и честное распределение доходов 80/20. Идеальное решение для независимых музыкантов новой волны.",
     footerBanner: "БЕЗОПАСНАЯ ДОСТАВКА МУЗЫКИ ОНЛАЙН",
@@ -139,6 +180,7 @@ export const translations = {
     artists: "ARTISTS",
     techSpec: "PLATFORM",
     partners: "PARTNERS",
+    pricing: "PRICING",
     sendDemo: "SUBMIT SINGLE",
     distTerms: "Distribution Terms",
     backToMain: "BACK TO MAIN",
@@ -258,6 +300,46 @@ export const translations = {
     // FAQ Section
     faqBadge: "FREQUENTLY ASKED QUESTIONS // FAQ",
     faqHeading: "INFORMATION INVENTORY",
+
+    // Pricing Section
+    pricingBadge: "TARIFF PLANS",
+    pricingHeading: "CHOOSE YOUR PERFECT FIT",
+    pricingSubtext: "// TRANSPARENT PRICING",
+    pricingBillingMonthly: "Monthly",
+    pricingBillingYearly: "Annually",
+    pricingSavePercent: "Save ~16%",
+    pricingPeriodMonth: "mo",
+    pricingPeriodYear: "yr",
+    pricingGetStarted: "Get Started Free",
+    pricingUpgrade: "Upgrade Now",
+
+    basicPlanTitle: "Basic Plan",
+    basicPlanPrice: "Free",
+    basicPlanDesc: "Ideal for starting creators and indie artists releasing music to local markets.",
+    basicPlanFeatures: [
+      "Standard distribution (VK Music, Yandex Music, Zvuk)",
+      "70/30 royalty split for new users (you keep 70%)",
+      "Standard audio formats support (WAV | FLAC)",
+      "Delivery times: 5 to 14 days (we recommend submitting 14 days in advance)",
+      "Complimentary ISRC and UPC codes assignment"
+    ],
+
+    advPlanTitle: "Advanced Plan",
+    advPlanPriceDesc: "Unlimited global capability",
+    advPlanFeatures: [
+      "Premium 80/20 royalty split in your favor (you keep 80%)",
+      "Global distribution to 150+ stores (Spotify, Apple Music, TikTok, etc.)",
+      "Maximum delivery speed: 5 to 14 days depending on store (recommend 14 days in advance)",
+      "Adding song lyrics to streaming services",
+      "Promotional pitch submissions for streaming editorial playlists",
+      "Daily advanced analytics in dashboard",
+      "Priority human support response 24/7 (via Telegram/Chat)",
+      "Priority payouts with zero processing delays"
+    ],
+
+    extraServiceTitle: "Additional Services",
+    extraServiceLyricsSync: "Lyrics Synchronization",
+    extraServiceLyricsDesc: "Adding dynamic, time-synced lyrics scroll to streaming platforms (Yandex Music, VK, Apple Music, etc.). Available for any plan.",
 
     // Footer Text Info
     footerAbout: "Fast music distribution to streaming platforms, automated copyright support, and fair 80/20 revenue division. The perfect platform for independent artists of the new wave.",

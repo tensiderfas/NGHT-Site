@@ -155,6 +155,16 @@ export default function Footer({ lang, onScrollTo, onNavigateToTerms, onNavigate
               </button>
             )}
 
+            {/* Pricing link */}
+            <button
+              onClick={() => onScrollTo('#pricing')}
+              className="text-xs text-[#7e8c9c] hover:text-brand-orange hover:translate-x-1 transition-all duration-300 text-left cursor-pointer inline-flex items-center gap-1.5 pt-1 uppercase select-none font-bold"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-blue animate-pulse" />
+              <span>{isRu ? "Тарифы и цены" : "Tariffs & Pricing"}</span>
+              <ArrowRight className="w-3 h-3 text-brand-orange shrink-0" />
+            </button>
+
             {/* Vacancies link */}
             {onNavigateToVacancies && (
               <button
