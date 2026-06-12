@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Check, Sparkles, Zap, Coins, Music, FileText, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Check, Sparkles, Zap, Coins, Music, FileText, Info, X } from 'lucide-react';
 import { translations } from '../translations';
+import { db, handleFirestoreError, OperationType } from '../firebase';
+import { doc, getDoc, collection, query, getDocs, orderBy } from 'firebase/firestore';
 
 interface PricingProps {
   lang: 'RU' | 'EN';
@@ -13,6 +15,51 @@ type BillingCycle = 'monthly' | 'yearly';
 export default function Pricing({ lang }: PricingProps) {
   const [currency, setCurrency] = useState<Currency>('RUB');
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
+  const [dbConfig, setDbConfig] = useState<any>(null);
+  const [dbExtras, setDbExtras] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Dynamic script loader for Yandex Embed Form to trigger proper resizing/initialization inside iframe
+  useEffect(() => {
+    if (isModalOpen) {
+      const script = document.createElement('script');
+      script.src = "https://forms.yandex.ru/_static/embed.js";
+      script.async = true;
+      document.body.appendChild(script);
+      return () => {
+        try {
+          document.body.removeChild(script);
+        } catch (e) {
+          // script might have been removed already
+        }
+      };
+    }
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    const fetchPricingConfigAndExtras = async () => {
+      try {
+        const docRef = doc(db, 'pricing_configs', 'config');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setDbConfig(docSnap.data());
+        }
+
+        const extraRef = collection(db, 'extra_services');
+        const q = query(extraRef, orderBy('createdAt', 'asc'));
+        const querySnapshot = await getDocs(q);
+        const loaded: any[] = [];
+        querySnapshot.forEach((d) => {
+          loaded.push({ id: d.id, ...d.data() });
+        });
+        setDbExtras(loaded);
+      } catch (err) {
+        console.error('Error loading pricing layout parameters:', err);
+        handleFirestoreError(err, OperationType.GET, 'pricing_configs/config or extra_services');
+      }
+    };
+    fetchPricingConfigAndExtras();
+  }, []);
 
   const isRu = lang === 'RU';
   const t = translations[lang];
@@ -27,10 +74,30 @@ export default function Pricing({ lang }: PricingProps) {
 
   // Advanced price structure matching user request
   const pricingData: Record<Currency, { monthly: number; yearly: number; symbol: string; prefix?: string; suffix?: string }> = {
-    RUB: { monthly: 100, yearly: 1000, symbol: '₽', suffix: '₽' },
-    KZT: { monthly: 500, yearly: 5000, symbol: '₸', suffix: '₸' },
-    USD: { monthly: 1.49, yearly: 14.99, symbol: '$', prefix: '$' },
-    EUR: { monthly: 1.29, yearly: 12.99, symbol: '€', prefix: '€' },
+    RUB: { 
+      monthly: dbConfig?.prices?.RUB?.monthly ?? 100, 
+      yearly: dbConfig?.prices?.RUB?.yearly ?? 1000, 
+      symbol: '₽', 
+      suffix: '₽' 
+    },
+    KZT: { 
+      monthly: dbConfig?.prices?.KZT?.monthly ?? 500, 
+      yearly: dbConfig?.prices?.KZT?.yearly ?? 5000, 
+      symbol: '₸', 
+      suffix: '₸' 
+    },
+    USD: { 
+      monthly: dbConfig?.prices?.USD?.monthly ?? 1.49, 
+      yearly: dbConfig?.prices?.USD?.yearly ?? 14.99, 
+      symbol: '$', 
+      prefix: '$' 
+    },
+    EUR: { 
+      monthly: dbConfig?.prices?.EUR?.monthly ?? 1.29, 
+      yearly: dbConfig?.prices?.EUR?.yearly ?? 12.99, 
+      symbol: '€', 
+      prefix: '€' 
+    },
   };
 
   const currentPrice = pricingData[currency];
@@ -119,7 +186,7 @@ export default function Pricing({ lang }: PricingProps) {
             >
               {t.pricingBillingYearly}
               <span className="text-[10px] bg-green-500/15 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-md font-mono">
-                {isRu ? "-16%" : "-16%"}
+                {`-${dbConfig?.yearlyDiscount ?? 16}%`}
               </span>
             </button>
           </div>
@@ -212,7 +279,11 @@ export default function Pricing({ lang }: PricingProps) {
               })}
             </ul>
 
-            <button className="w-full py-3.5 px-6 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-neutral-800 dark:text-white text-sm font-medium tracking-wide transition-all duration-300">
+            <button 
+              id="pricing-btn-free"
+              onClick={() => setIsModalOpen(true)}
+              className="w-full py-3.5 px-6 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-neutral-800 dark:text-white text-sm font-medium tracking-wide transition-all duration-300 cursor-pointer"
+            >
               {t.pricingGetStarted}
             </button>
           </motion.div>
@@ -311,7 +382,11 @@ export default function Pricing({ lang }: PricingProps) {
               })}
             </ul>
 
-            <button className="w-full py-4 px-6 rounded-xl bg-brand-blue hover:bg-brand-blue-hover dark:bg-brand-blue dark:hover:bg-sky-500 text-white text-sm font-medium tracking-wide shadow-md hover:shadow-lg transition-all duration-300 uppercase font-mono">
+            <button 
+              id="pricing-btn-premium"
+              onClick={() => setIsModalOpen(true)}
+              className="w-full py-4 px-6 rounded-xl bg-brand-blue hover:bg-brand-blue-hover dark:bg-brand-blue dark:hover:bg-sky-500 text-white text-sm font-medium tracking-wide shadow-md hover:shadow-lg transition-all duration-300 uppercase font-mono cursor-pointer"
+            >
               {t.pricingUpgrade}
             </button>
           </motion.div>
@@ -344,37 +419,148 @@ export default function Pricing({ lang }: PricingProps) {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <div className="p-5 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200/40 dark:border-neutral-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-brand-blue/30 dark:hover:border-brand-blue/20 transition-all duration-300">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-brand-blue/8 text-brand-blue dark:bg-brand-blue/10 dark:text-[#38bdf8] shrink-0 mt-0.5">
-                  <FileText className="w-5 h-5" />
+            {dbExtras.length === 0 ? (
+              <div className="p-5 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200/40 dark:border-neutral-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-brand-blue/30 dark:hover:border-brand-blue/20 transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-lg bg-brand-blue/8 text-brand-blue dark:bg-brand-blue/10 dark:text-[#38bdf8] shrink-0 mt-0.5">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                      {t.extraServiceLyricsSync}
+                      <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        {isRu ? "Для всех планов" : "All plans"}
+                      </span>
+                    </h5>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xl">
+                      {t.extraServiceLyricsDesc}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h5 className="font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                    {t.extraServiceLyricsSync}
-                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      {isRu ? "Для всех планов" : "All plans"}
-                    </span>
-                  </h5>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xl">
-                    {t.extraServiceLyricsDesc}
-                  </p>
+                
+                <div className="text-left sm:text-right shrink-0">
+                  <span className="block text-2xl font-bold font-mono text-neutral-950 dark:text-white">
+                    {currency === 'RUB' ? '50 ₽' : currency === 'KZT' ? '250 ₸' : currency === 'USD' ? '$0.75' : '€0.69'}
+                  </span>
+                  <span className="text-[10px] font-mono text-neutral-400 dark:text-neutral-500 block uppercase">
+                    {isRu ? "за релиз" : "per release"}
+                  </span>
                 </div>
               </div>
-              
-              <div className="text-left sm:text-right shrink-0">
-                <span className="block text-2xl font-bold font-mono text-neutral-950 dark:text-white">
-                  {currency === 'RUB' ? '50 ₽' : currency === 'KZT' ? '250 ₸' : currency === 'USD' ? '$0.75' : '€0.69'}
-                </span>
-                <span className="text-[10px] font-mono text-neutral-400 dark:text-neutral-500 block uppercase">
-                  {isRu ? "за релиз" : "per release"}
-                </span>
-              </div>
-            </div>
+            ) : (
+              dbExtras.map((es) => {
+                const formattedPrice = currency === 'RUB' 
+                  ? `${es.priceRub} ₽` 
+                  : currency === 'KZT' 
+                    ? `${es.priceKzt} ₸` 
+                    : currency === 'USD' 
+                      ? `$${es.priceUsd}` 
+                      : `€${es.priceEur}`;
+
+                return (
+                  <div key={es.id} className="p-5 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200/40 dark:border-neutral-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-brand-blue/30 dark:hover:border-brand-blue/20 transition-all duration-300 text-left">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-lg bg-brand-blue/8 text-brand-blue dark:bg-brand-blue/10 dark:text-[#38bdf8] shrink-0 mt-0.5">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 flex-grow text-left">
+                        <h5 className="font-bold text-neutral-900 dark:text-white flex items-center gap-2 flex-wrap text-left">
+                          {isRu ? es.titleRu : es.titleEn}
+                          {(es.badgeRu || es.badgeEn) && (
+                            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              {isRu ? es.badgeRu : es.badgeEn}
+                            </span>
+                          )}
+                        </h5>
+                        {(es.descRu || es.descEn) && (
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xl text-left">
+                            {isRu ? es.descRu : es.descEn}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="text-left sm:text-right shrink-0">
+                      <span className="block text-2xl font-bold font-mono text-neutral-950 dark:text-white">
+                        {formattedPrice}
+                      </span>
+                      <span className="text-[10px] font-mono text-neutral-400 dark:text-neutral-500 block uppercase">
+                        {isRu ? "за релиз" : "per release"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </motion.div>
 
       </div>
+
+      {/* Modern Dialog/Modal for Yandex Forms Integration */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div 
+            id="pricing-modal-overlay"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-sm"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <motion.div
+              id="pricing-modal-container"
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 35 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800/85 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[90vh] max-h-[850px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div 
+                id="pricing-modal-header"
+                className="flex items-center justify-between px-6 py-4 border-b border-neutral-150 dark:border-neutral-900 bg-neutral-50 dark:bg-neutral-950/40 select-none"
+              >
+                <div className="text-left">
+                  <h3 className="font-sans font-bold text-lg text-neutral-900 dark:text-white">
+                    {isRu ? 'Оформление заявки' : 'Distribution Application'}
+                  </h3>
+                  <p className="font-mono text-[9px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mt-0.5">
+                    {isRu ? 'Яндекс Формы // Подача демо на лейбл' : 'Yandex Forms // Demo submission'}
+                  </p>
+                </div>
+                <button
+                  id="pricing-modal-close-btn"
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-white rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all cursor-pointer"
+                  aria-label="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body with Scrollable Embed */}
+              <div 
+                id="pricing-modal-body"
+                className="flex-grow p-4 md:p-6 bg-white dark:bg-neutral-950 flex flex-col h-full min-h-0 overflow-hidden"
+              >
+                <div className="relative w-full h-full rounded-2xl overflow-y-auto border border-neutral-200/60 dark:border-neutral-900 bg-white shadow-inner flex-grow">
+                  <iframe 
+                    id="pricing-iframe-yandex"
+                    src="https://forms.yandex.ru/cloud/6995f94eeb614637b4790bb7?iframe=1" 
+                    frameBorder="0" 
+                    scrolling="yes"
+                    name="ya-form-6995f94eeb614637b4790bb7" 
+                    className="w-full border-0 bg-white block overflow-y-auto"
+                    style={{ minHeight: '980px', height: '1050px' }}
+                    title="Yandex Form"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </section>
   );
 }

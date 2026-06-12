@@ -92,7 +92,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
 
   // Partners Management States
-  const [activeTab, setActiveTab] = useState<'candidates' | 'partners' | 'artists'>('candidates');
+  const [activeTab, setActiveTab] = useState<'candidates' | 'partners' | 'artists' | 'pricing'>('candidates');
   const [partners, setPartners] = useState<any[]>([]);
   const [loadingPartners, setLoadingPartners] = useState(false);
   const [partnerForm, setPartnerForm] = useState({
@@ -120,6 +120,174 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
     socialUrl: '',
     order: ''
   });
+
+  // Pricing & Discounts Management States
+  const [loadingPricing, setLoadingPricing] = useState(false);
+  const [pricingMsg, setPricingMsg] = useState('');
+  const [pricingConfig, setPricingConfig] = useState<any>({
+    monthlyDiscount: 0,
+    yearlyDiscount: 16,
+    prices: {
+      RUB: { monthly: 100, yearly: 1000 },
+      KZT: { monthly: 500, yearly: 5000 },
+      USD: { monthly: 1.49, yearly: 14.99 },
+      EUR: { monthly: 1.29, yearly: 12.99 }
+    }
+  });
+
+  const [extraServices, setExtraServices] = useState<any[]>([]);
+  const [loadingExtras, setLoadingExtras] = useState(false);
+  const [extraForm, setExtraForm] = useState({
+    id: '',
+    titleRu: '',
+    titleEn: '',
+    descRu: '',
+    descEn: '',
+    badgeRu: '',
+    badgeEn: '',
+    priceRub: 50,
+    priceKzt: 250,
+    priceUsd: 0.75,
+    priceEur: 0.69
+  });
+  const [extraSubmitting, setExtraSubmitting] = useState(false);
+  const [extraMsg, setExtraMsg] = useState('');
+
+  // Fetch Pricing Configuration and Extra Options
+  const fetchPricingData = async () => {
+    setLoadingPricing(true);
+    try {
+      const docRef = doc(db, 'pricing_configs', 'config');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setPricingConfig({
+          monthlyDiscount: data.monthlyDiscount ?? 0,
+          yearlyDiscount: data.yearlyDiscount ?? 16,
+          prices: data.prices || {
+            RUB: { monthly: 100, yearly: 1000 },
+            KZT: { monthly: 500, yearly: 5000 },
+            USD: { monthly: 1.49, yearly: 14.99 },
+            EUR: { monthly: 1.29, yearly: 12.99 }
+          }
+        });
+      } else {
+        const defaultPricing = {
+          id: 'config',
+          monthlyDiscount: 0,
+          yearlyDiscount: 16,
+          prices: {
+            RUB: { monthly: 100, yearly: 1000 },
+            KZT: { monthly: 500, yearly: 5000 },
+            USD: { monthly: 1.49, yearly: 14.99 },
+            EUR: { monthly: 1.29, yearly: 12.99 }
+          }
+        };
+        await setDoc(docRef, defaultPricing);
+        setPricingConfig(defaultPricing);
+      }
+
+      setLoadingExtras(true);
+      const extraRef = collection(db, 'extra_services');
+      const q = query(extraRef, orderBy('createdAt', 'asc'));
+      const querySnapshot = await getDocs(q);
+      const loaded: any[] = [];
+      querySnapshot.forEach((d) => {
+        loaded.push({ id: d.id, ...d.data() });
+      });
+      setExtraServices(loaded);
+    } catch (err) {
+      console.error('Error fetching pricing/extras:', err);
+    } finally {
+      setLoadingPricing(false);
+      setLoadingExtras(false);
+    }
+  };
+
+  const handleSavePricingConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPricingMsg('');
+    try {
+      const docRef = doc(db, 'pricing_configs', 'config');
+      await setDoc(docRef, {
+        id: 'config',
+        monthlyDiscount: Number(pricingConfig.monthlyDiscount) || 0,
+        yearlyDiscount: Number(pricingConfig.yearlyDiscount) || 0,
+        prices: pricingConfig.prices,
+        updatedAt: serverTimestamp()
+      });
+      setPricingMsg(isRu ? 'Настройки тарифов успешно сохранены!' : 'Pricing configs saved successfully!');
+    } catch (err: any) {
+      console.error(err);
+      setPricingMsg(isRu ? `Ошибка при сохранении: ${err.message}` : `Save pricing failed: ${err.message}`);
+    }
+  };
+
+  const handleSaveExtraService = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!extraForm.titleRu.trim() || !extraForm.titleEn.trim()) {
+      setExtraMsg(isRu ? 'Пожалуйста, укажите название услуги на двух языках.' : 'Please fill in service titles.');
+      return;
+    }
+    setExtraSubmitting(true);
+    setExtraMsg('');
+    try {
+      const collectionRef = collection(db, 'extra_services');
+      const targetId = extraForm.id || doc(collectionRef).id;
+      const docRef = doc(db, 'extra_services', targetId);
+      
+      await setDoc(docRef, {
+        id: targetId,
+        titleRu: extraForm.titleRu.trim(),
+        titleEn: extraForm.titleEn.trim(),
+        descRu: extraForm.descRu.trim(),
+        descEn: extraForm.descEn.trim(),
+        badgeRu: extraForm.badgeRu.trim(),
+        badgeEn: extraForm.badgeEn.trim(),
+        priceRub: Number(extraForm.priceRub) || 0,
+        priceKzt: Number(extraForm.priceKzt) || 0,
+        priceUsd: Number(extraForm.priceUsd) || 0,
+        priceEur: Number(extraForm.priceEur) || 0,
+        createdAt: serverTimestamp()
+      });
+      
+      setExtraForm({
+        id: '',
+        titleRu: '',
+        titleEn: '',
+        descRu: '',
+        descEn: '',
+        badgeRu: '',
+        badgeEn: '',
+        priceRub: 50,
+        priceKzt: 250,
+        priceUsd: 0.75,
+        priceEur: 0.69
+      });
+      setExtraMsg(isRu ? 'Дополнительная услуга сохранена!' : 'Additional service saved successfully!');
+      fetchPricingData();
+    } catch (err: any) {
+      console.error(err);
+      setExtraMsg(isRu ? `Ошибка: ${err.message}` : `Error: ${err.message}`);
+    } finally {
+      setExtraSubmitting(false);
+    }
+  };
+
+  const handleDeleteExtraService = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(isRu ? 'Вы уверены, что хотите удалить эту услугу?' : 'Are you sure you want to delete this service?')) {
+      return;
+    }
+    try {
+      const docRef = doc(db, 'extra_services', id);
+      await deleteDoc(docRef);
+      fetchPricingData();
+    } catch (err) {
+      console.error(err);
+      alert(isRu ? 'Не удалось удалить услугу' : 'Failed to delete service');
+    }
+  };
 
   // Helper to hash passwords securely using standard WebCrypto API in the browser
   const hashPassword = async (password: string): Promise<string> => {
@@ -220,6 +388,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
               fetchSubmissions();
               fetchPartners();
               fetchArtists();
+              fetchPricingData();
             } else {
               deleteDoc(sessionRef).catch(() => {});
               localStorage.removeItem('admin_token');
@@ -503,6 +672,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       fetchSubmissions();
       fetchPartners();
       fetchArtists();
+      fetchPricingData();
     } catch (err: any) {
       console.error('Email password login error:', err);
       setAuthError(err.message || (isRu 
@@ -787,7 +957,9 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                     ? (isRu ? "БАЗА КАНДИДАТОВ" : "CANDIDATES DATABASE") 
                     : activeTab === 'partners' 
                       ? (isRu ? "ПАРТНЕРСКАЯ СЕТЬ" : "PARTNERS NETWORK")
-                      : (isRu ? "НАШИ АРТИСТЫ" : "OUR ARTISTS")}
+                      : activeTab === 'artists'
+                        ? (isRu ? "НАШИ АРТИСТЫ" : "OUR ARTISTS")
+                        : (isRu ? "УПРАВЛЕНИЕ ТАРИФАМИ" : "PRICING ENGINE")}
                 </h1>
                 <p className="text-xs font-mono text-neutral-400 uppercase tracking-wider mt-1">
                   CURRENT USER: <span className="text-brand-blue font-bold">{adminUser?.email}</span>
@@ -827,6 +999,16 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                   >
                     {isRu ? 'Артисты' : 'Artists'}
                   </button>
+                  <button
+                    onClick={() => setActiveTab('pricing')}
+                    className={`py-1.5 px-3.5 rounded-lg text-xs font-mono font-bold tracking-wide uppercase transition-all duration-300 cursor-pointer ${
+                      activeTab === 'pricing'
+                        ? 'bg-neutral-950 text-white shadow-xs'
+                        : 'text-neutral-500 hover:text-neutral-950'
+                    }`}
+                  >
+                    {isRu ? 'Тарифы' : 'Pricing'}
+                  </button>
                 </div>
 
                 <button
@@ -835,12 +1017,14 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
                       ? fetchSubmissions 
                       : activeTab === 'partners' 
                         ? fetchPartners 
-                        : fetchArtists
+                        : activeTab === 'artists'
+                          ? fetchArtists
+                          : fetchPricingData
                   }
-                  disabled={loadingData || loadingPartners || loadingArtists}
+                  disabled={loadingData || loadingPartners || loadingArtists || loadingPricing}
                   className="flex items-center gap-2 px-4 py-2 bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wide uppercase hover:bg-neutral-950 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${(loadingData || loadingPartners || loadingArtists) ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 ${(loadingData || loadingPartners || loadingArtists || loadingPricing) ? 'animate-spin' : ''}`} />
                   <span>{isRu ? "ОБНОВИТЬ" : "REFRESH"}</span>
                 </button>
               </div>
@@ -1377,7 +1561,7 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
             </div>
 
           </div>
-        ) : (
+        ) : activeTab === 'artists' ? (
           /* activeTab === 'artists' */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
@@ -1610,6 +1794,508 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
               </div>
             </div>
 
+          </div>
+        ) : (
+          /* activeTab === 'pricing' */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Main Tariffs & Discount Management */}
+            <div className="col-span-12 lg:col-span-6 space-y-8">
+              {/* Card 1: Pricing Base Config */}
+              <div className="bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm space-y-6">
+                <div className="border-b border-neutral-100 pb-3">
+                  <span className="font-mono text-[10px] tracking-widest text-[#7e8c9c] font-black uppercase flex items-center gap-1.5">
+                    <Table className="w-4 h-4 text-emerald-500" />
+                    {isRu ? "БАЗОВЫЕ ТАРИФЫ" : "BASE SUBSCRIPTION TARIFFS"}
+                  </span>
+                </div>
+
+                {pricingMsg && (
+                  <div className={`p-4 rounded-xl text-xs text-left ${
+                    pricingMsg.includes('успешно') || pricingMsg.includes('successfully')
+                      ? 'bg-emerald-50 border border-emerald-200/60 text-emerald-700'
+                      : 'bg-rose-50 border border-rose-200/60 text-rose-600'
+                  }`}>
+                    {pricingMsg}
+                  </div>
+                )}
+
+                <form onSubmit={handleSavePricingConfig} className="space-y-6">
+                  {/* Currency Price Grids */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* RUB */}
+                    <div className="p-4 bg-neutral-50/50 border border-neutral-200/60 rounded-2xl space-y-3">
+                      <span className="font-mono text-[10px] text-neutral-500 font-bold uppercase tracking-wider block">RUB (₽)</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1 text-left">
+                          <label className="font-mono text-[8px] tracking-wider text-neutral-400 font-bold uppercase block">{isRu ? 'Месяц' : 'Monthly'}</label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            required
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                            value={pricingConfig?.prices?.RUB?.monthly ?? 100}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setPricingConfig((prev: any) => ({
+                                ...prev,
+                                prices: {
+                                  ...prev.prices,
+                                  RUB: { ...prev.prices.RUB, monthly: val }
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1 text-left">
+                          <label className="font-mono text-[8px] tracking-wider text-neutral-400 font-bold uppercase block">{isRu ? 'Год' : 'Yearly'}</label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            required
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                            value={pricingConfig?.prices?.RUB?.yearly ?? 1000}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setPricingConfig((prev: any) => ({
+                                ...prev,
+                                prices: {
+                                  ...prev.prices,
+                                  RUB: { ...prev.prices.RUB, yearly: val }
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* KZT */}
+                    <div className="p-4 bg-neutral-50/50 border border-neutral-200/60 rounded-2xl space-y-3">
+                      <span className="font-mono text-[10px] text-neutral-500 font-bold uppercase tracking-wider block">KZT (₸)</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1 text-left">
+                          <label className="font-mono text-[8px] tracking-wider text-neutral-400 font-bold uppercase block">{isRu ? 'Месяц' : 'Monthly'}</label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            required
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                            value={pricingConfig?.prices?.KZT?.monthly ?? 500}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setPricingConfig((prev: any) => ({
+                                ...prev,
+                                prices: {
+                                  ...prev.prices,
+                                  KZT: { ...prev.prices.KZT, monthly: val }
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1 text-left">
+                          <label className="font-mono text-[8px] tracking-wider text-neutral-400 font-bold uppercase block">{isRu ? 'Год' : 'Yearly'}</label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            required
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                            value={pricingConfig?.prices?.KZT?.yearly ?? 5000}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setPricingConfig((prev: any) => ({
+                                ...prev,
+                                prices: {
+                                  ...prev.prices,
+                                  KZT: { ...prev.prices.KZT, yearly: val }
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* USD */}
+                    <div className="p-4 bg-neutral-50/50 border border-neutral-200/60 rounded-2xl space-y-3">
+                      <span className="font-mono text-[10px] text-neutral-500 font-bold uppercase tracking-wider block">USD ($)</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1 text-left">
+                          <label className="font-mono text-[8px] tracking-wider text-neutral-400 font-bold uppercase block">{isRu ? 'Месяц' : 'Monthly'}</label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            required
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                            value={pricingConfig?.prices?.USD?.monthly ?? 1.49}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setPricingConfig((prev: any) => ({
+                                ...prev,
+                                prices: {
+                                  ...prev.prices,
+                                  USD: { ...prev.prices.USD, monthly: val }
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1 text-left">
+                          <label className="font-mono text-[8px] tracking-wider text-neutral-400 font-bold uppercase block">{isRu ? 'Год' : 'Yearly'}</label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            required
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                            value={pricingConfig?.prices?.USD?.yearly ?? 14.99}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setPricingConfig((prev: any) => ({
+                                ...prev,
+                                prices: {
+                                  ...prev.prices,
+                                  USD: { ...prev.prices.USD, yearly: val }
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* EUR */}
+                    <div className="p-4 bg-neutral-50/50 border border-neutral-200/60 rounded-2xl space-y-3">
+                      <span className="font-mono text-[10px] text-neutral-500 font-bold uppercase tracking-wider block">EUR (€)</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1 text-left">
+                          <label className="font-mono text-[8px] tracking-wider text-neutral-400 font-bold uppercase block">{isRu ? 'Месяц' : 'Monthly'}</label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            required
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                            value={pricingConfig?.prices?.EUR?.monthly ?? 1.29}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setPricingConfig((prev: any) => ({
+                                ...prev,
+                                prices: {
+                                  ...prev.prices,
+                                  EUR: { ...prev.prices.EUR, monthly: val }
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1 text-left">
+                          <label className="font-mono text-[8px] tracking-wider text-neutral-400 font-bold uppercase block">{isRu ? 'Год' : 'Yearly'}</label>
+                          <input 
+                            type="number" 
+                            step="any" 
+                            required
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                            value={pricingConfig?.prices?.EUR?.yearly ?? 12.99}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setPricingConfig((prev: any) => ({
+                                ...prev,
+                                prices: {
+                                  ...prev.prices,
+                                  EUR: { ...prev.prices.EUR, yearly: val }
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Discounts Setup Row */}
+                  <div className="p-5 bg-emerald-500/[0.02] border border-emerald-500/15 rounded-2xl space-y-4">
+                    <span className="font-mono text-[10px] text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1.5 leading-none">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {isRu ? 'СИСТЕМА СКИДОК' : 'CONFIGURED DISCOUNT ENGINE'}
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 text-left">
+                        <label className="font-mono text-[9px] tracking-widest text-[#7e8c9c] font-bold uppercase block">
+                          {isRu ? "Скидка годового тарифа (%) *" : "Yearly Subscription Discount (%) *"}
+                        </label>
+                        <input 
+                          type="number" 
+                          min="0" 
+                          max="100" 
+                          required
+                          className="w-full bg-white border border-neutral-200 focus:border-emerald-500 rounded-xl px-4 py-2 text-xs font-mono font-bold"
+                          value={pricingConfig.yearlyDiscount ?? 16}
+                          onChange={(e) => setPricingConfig((prev: any) => ({ ...prev, yearlyDiscount: Number(e.target.value) }))}
+                        />
+                      </div>
+                      <div className="space-y-1.5 text-left">
+                        <label className="font-mono text-[9px] tracking-widest text-[#7e8c9c] font-bold uppercase block">
+                          {isRu ? "Скидка месячного тарифа (%) *" : "Monthly Subscription Discount (%) *"}
+                        </label>
+                        <input 
+                          type="number" 
+                          min="0" 
+                          max="100" 
+                          required
+                          className="w-full bg-white border border-neutral-200 focus:border-emerald-500 rounded-xl px-4 py-2 text-xs font-mono font-bold"
+                          value={pricingConfig.monthlyDiscount ?? 0}
+                          onChange={(e) => setPricingConfig((prev: any) => ({ ...prev, monthlyDiscount: Number(e.target.value) }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-[#e1222e] hover:bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all duration-300 shadow-sm cursor-pointer"
+                  >
+                    {isRu ? 'СОХРАНИТЬ ТАРИФНЫЕ ПЛАНЫ' : 'SAVE PRICING PLANS ENGINE'}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* Right Column: Additional Custom Services Manager */}
+            <div className="col-span-12 lg:col-span-6 space-y-8">
+              <div className="bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm space-y-6">
+                <div className="border-b border-neutral-100 pb-3 flex items-center justify-between">
+                  <span className="font-mono text-[10px] tracking-widest text-[#7e8c9c] font-black uppercase flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-brand-orange" />
+                    {extraForm.id ? (isRu ? "РЕДАКТИРОВАНИЕ УСЛУГИ" : "EDIT EXTRA SERVICE") : (isRu ? "ДОП. УСЛУГИ" : "EXTRA SERVICES MANAGEMENT")}
+                  </span>
+                  {extraForm.id && (
+                    <button 
+                      onClick={() => setExtraForm({
+                        id: '', titleRu: '', titleEn: '', descRu: '', descEn: '', badgeRu: '', badgeEn: '',
+                        priceRub: 50, priceKzt: 250, priceUsd: 0.75, priceEur: 0.69
+                      })}
+                      className="text-[9px] font-mono hover:text-[#e1222e] uppercase font-bold"
+                    >
+                      [{isRu ? "Отмена" : "Cancel"}]
+                    </button>
+                  )}
+                </div>
+
+                {extraMsg && (
+                  <div className={`p-4 rounded-xl text-xs text-left ${
+                    extraMsg.includes('успешно') || extraMsg.includes('сохранена') || extraMsg.includes('successfully')
+                      ? 'bg-emerald-50 border border-emerald-200/60 text-emerald-700'
+                      : 'bg-rose-50 border border-rose-200/60 text-rose-600'
+                  }`}>
+                    {extraMsg}
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveExtraService} className="space-y-4">
+                  {/* Title Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5 text-left">
+                      <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                        {isRu ? "Название (RU) *" : "Title (RU) *"}
+                      </label>
+                      <input 
+                        type="text" 
+                        required
+                        className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2 text-xs"
+                        value={extraForm.titleRu}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, titleRu: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1.5 text-left">
+                      <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                        {isRu ? "Название (EN) *" : "Title (EN) *"}
+                      </label>
+                      <input 
+                        type="text" 
+                        required
+                        className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2 text-xs"
+                        value={extraForm.titleEn}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, titleEn: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Description Fields */}
+                  <div className="space-y-1.5 text-left">
+                    <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                      {isRu ? "Описание (Русский)" : "Description (Russian)"}
+                    </label>
+                    <textarea 
+                      rows={2}
+                      className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2 text-xs resize-none"
+                      value={extraForm.descRu}
+                      onChange={(e) => setExtraForm(prev => ({ ...prev, descRu: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5 text-left">
+                    <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                      {isRu ? "Описание (Английский)" : "Description (English)"}
+                    </label>
+                    <textarea 
+                      rows={2}
+                      className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2 text-xs resize-none"
+                      value={extraForm.descEn}
+                      onChange={(e) => setExtraForm(prev => ({ ...prev, descEn: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* Badges Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5 text-left">
+                      <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                        {isRu ? "Значок/Badge (RU)" : "Badge text (RU)"}
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Для всех планов"
+                        className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2 text-xs"
+                        value={extraForm.badgeRu}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, badgeRu: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1.5 text-left">
+                      <label className="font-mono text-[9px] tracking-widest text-neutral-400 font-bold uppercase block">
+                        {isRu ? "Значок/Badge (EN)" : "Badge text (EN)"}
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. All plans"
+                        className="w-full bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200 focus:border-brand-blue rounded-xl px-4 py-2 text-xs"
+                        value={extraForm.badgeEn}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, badgeEn: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Price inputs per currencies */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                    <div className="space-y-1 text-left">
+                      <label className="font-mono text-[8px] text-neutral-400 font-bold uppercase block">RUB (₽)</label>
+                      <input 
+                        type="number" 
+                        required
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                        value={extraForm.priceRub}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, priceRub: Number(e.target.value) }))}
+                      />
+                    </div>
+                    <div className="space-y-1 text-left">
+                      <label className="font-mono text-[8px] text-neutral-400 font-bold uppercase block">KZT (₸)</label>
+                      <input 
+                        type="number" 
+                        required
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                        value={extraForm.priceKzt}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, priceKzt: Number(e.target.value) }))}
+                      />
+                    </div>
+                    <div className="space-y-1 text-left">
+                      <label className="font-mono text-[8px] text-neutral-400 font-bold uppercase block">USD ($)</label>
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        required
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                        value={extraForm.priceUsd}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, priceUsd: Number(e.target.value) }))}
+                      />
+                    </div>
+                    <div className="space-y-1 text-left">
+                      <label className="font-mono text-[8px] text-neutral-400 font-bold uppercase block">EUR (€)</label>
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        required
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-lg p-2 text-xs font-mono"
+                        value={extraForm.priceEur}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, priceEur: Number(e.target.value) }))}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={extraSubmitting}
+                    className="w-full py-3 bg-[#e1222e] hover:bg-neutral-950 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all duration-300 shadow-sm cursor-pointer disabled:opacity-50"
+                  >
+                    {extraSubmitting ? (isRu ? 'СОХРАНЕНИЕ...' : 'SAVING...') : (isRu ? 'СОХРАНИТЬ УСЛУГУ' : 'SAVE SERVICE CREDENTIALS')}
+                  </button>
+                </form>
+
+                <div className="border-t border-neutral-100 pt-6 space-y-3">
+                  <span className="font-mono text-[10px] tracking-widest text-[#7e8c9c] font-bold block text-left">
+                    {isRu ? 'СПИСОК ДОПОЛНИТЕЛЬНЫХ УСЛУГ В БД' : 'ACTIVE DYNAMIC GENERAL OPTIONS'}
+                  </span>
+
+                  {loadingExtras ? (
+                    <div className="py-6 text-center text-xs font-mono text-neutral-400 animate-pulse">
+                      {isRu ? 'ЗАГРУЗКА...' : 'FETCHING CLOUD BASE...'}
+                    </div>
+                  ) : extraServices.length === 0 ? (
+                    <div className="py-8 text-center text-xs font-mono text-neutral-400 border border-dashed border-neutral-200 rounded-2xl">
+                      {isRu ? 'НЕТ СОЗДАННЫХ УСЛУГ' : 'NO DYNAMIC EXTRA ENTRIES FOUND'}
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {extraServices.map((es: any) => (
+                        <div 
+                          key={es.id}
+                          className="p-3.5 bg-neutral-50 hover:bg-neutral-100/50 border border-neutral-200/50 rounded-2xl flex items-center justify-between gap-4 transition-colors text-left"
+                        >
+                          <div className="min-w-0 flex-grow">
+                            <h5 className="font-bold text-xs text-neutral-900 truncate flex items-center gap-1.5">
+                              {isRu ? es.titleRu : es.titleEn}
+                              {(es.badgeRu || es.badgeEn) && (
+                                <span className="text-[8px] uppercase font-mono px-1.5 py-0.5 rounded bg-brand-blue/10 text-brand-blue leading-none">
+                                  {isRu ? (es.badgeRu || es.badgeEn) : (es.badgeEn || es.badgeRu)}
+                                </span>
+                              )}
+                            </h5>
+                            <p className="text-[10px] text-neutral-400 truncate mt-0.5">
+                              {isRu ? es.descRu : es.descEn}
+                            </p>
+                            <span className="font-mono text-[9px] text-emerald-600 block mt-1">
+                              ₽{es.priceRub} | ₸{es.priceKzt} | ${es.priceUsd} | €{es.priceEur}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              onClick={() => setExtraForm({
+                                id: es.id,
+                                titleRu: es.titleRu || '',
+                                titleEn: es.titleEn || '',
+                                descRu: es.descRu || '',
+                                descEn: es.descEn || '',
+                                badgeRu: es.badgeRu || '',
+                                badgeEn: es.badgeEn || '',
+                                priceRub: es.priceRub ?? 50,
+                                priceKzt: es.priceKzt ?? 250,
+                                priceUsd: es.priceUsd ?? 0.75,
+                                priceEur: es.priceEur ?? 0.69
+                              })}
+                              className="p-1 px-1.5 bg-neutral-150 hover:bg-neutral-950 text-neutral-600 hover:text-white rounded-lg transition-colors font-mono text-[9px] uppercase font-bold cursor-pointer"
+                            >
+                              {isRu ? "Ред" : "Edit"}
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteExtraService(es.id, e)}
+                              className="p-1.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

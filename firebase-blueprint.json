@@ -48,6 +48,39 @@
         "order": { "type": "number" }
       },
       "required": ["id", "createdAt", "name", "imageUrl"]
+    },
+    "pricing_config": {
+      "title": "Pricing Config",
+      "description": "Customizable pricing and discounts configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "monthlyDiscount": { "type": "number" },
+        "yearlyDiscount": { "type": "number" },
+        "prices": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "prices"]
+    },
+    "extra_service": {
+      "title": "Extra Service",
+      "description": "Additional optional custom services",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "titleRu": { "type": "string" },
+        "titleEn": { "type": "string" },
+        "descRu": { "type": "string" },
+        "descEn": { "type": "string" },
+        "badgeRu": { "type": "string" },
+        "badgeEn": { "type": "string" },
+        "priceRub": { "type": "number" },
+        "priceKzt": { "type": "number" },
+        "priceUsd": { "type": "number" },
+        "priceEur": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "titleRu", "titleEn", "priceRub"]
     }
   },
   "firestore": {
@@ -62,6 +95,14 @@
     "/artists/{artistId}": {
       "schema": "artist",
       "description": "Collection of music label artists"
+    },
+    "/pricing_configs/{configId}": {
+      "schema": "pricing_config",
+      "description": "Collection of pricing custom configs"
+    },
+    "/extra_services/{serviceId}": {
+      "schema": "extra_service",
+      "description": "Collection of extra services"
     }
   }
 }

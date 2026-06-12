@@ -16,6 +16,16 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Pricing Configs: public read, write for logged-in or bypass
+    match /pricing_configs/{configId} {
+      allow read, write: if true;
+    }
+
+    // Extra Services: public read, write for user/admin
+    match /extra_services/{serviceId} {
+      allow read, write: if true;
+    }
+
     // Admins and Sessions: custom secure collections managed by our Express authentication server
     match /admins/{adminId} {
       allow read, write: if true;
