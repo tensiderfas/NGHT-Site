@@ -1,0 +1,8 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/images/:path*", "destination": "/images/:path*" },
+    { "source": "/((?!api|images|vite|@vite|@fs|src|node_modules|assets).*)", "destination": "/index.html" }
+  ]
+}

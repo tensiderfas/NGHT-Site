@@ -104,11 +104,29 @@ export default function Pricing({ lang }: PricingProps) {
 
   const getFormattedPrice = (amount: number, curr: Currency) => {
     const data = pricingData[curr];
+    const rounded = parseFloat(amount.toFixed(2));
     if (data.prefix) {
-      return `${data.prefix}${amount}`;
+      return `${data.prefix}${rounded}`;
     }
-    return `${amount} ${data.suffix}`;
+    return `${rounded} ${data.suffix}`;
   };
+
+  const activeDiscount = billingCycle === 'monthly' 
+    ? (dbConfig?.monthlyDiscount ?? 0) 
+    : (dbConfig?.yearlyDiscount ?? 16);
+
+  const basePriceValue = billingCycle === 'monthly' 
+    ? currentPrice.monthly 
+    : currentPrice.yearly;
+
+  const getDiscountedPriceAmount = (base: number, pct: number) => {
+    if (!pct || pct <= 0) return base;
+    const discounted = base * (1 - pct / 100);
+    return discounted;
+  };
+
+  const finalPriceValue = getDiscountedPriceAmount(basePriceValue, activeDiscount);
+  const hasDiscount = activeDiscount > 0;
 
   const getPeriodText = () => {
     if (billingCycle === 'monthly') {
@@ -168,13 +186,18 @@ export default function Pricing({ lang }: PricingProps) {
           <div className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-900/80 border border-neutral-200/50 dark:border-neutral-800/60 p-1 rounded-xl">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+              className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5 ${
                 billingCycle === 'monthly'
                   ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-sm'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
               }`}
             >
               {t.pricingBillingMonthly}
+              {dbConfig?.monthlyDiscount > 0 && (
+                <span className="text-[10px] bg-green-500/15 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-md font-mono">
+                  {`-${dbConfig.monthlyDiscount}%`}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
@@ -185,9 +208,11 @@ export default function Pricing({ lang }: PricingProps) {
               }`}
             >
               {t.pricingBillingYearly}
-              <span className="text-[10px] bg-green-500/15 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-md font-mono">
-                {`-${dbConfig?.yearlyDiscount ?? 16}%`}
-              </span>
+              {(dbConfig?.yearlyDiscount !== undefined ? dbConfig.yearlyDiscount : 16) > 0 && (
+                <span className="text-[10px] bg-green-500/15 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-md font-mono">
+                  {`-${dbConfig?.yearlyDiscount ?? 16}%`}
+                </span>
+              )}
             </button>
           </div>
 
@@ -317,14 +342,16 @@ export default function Pricing({ lang }: PricingProps) {
               </p>
             </div>
 
-            <div className="flex items-baseline mb-8">
+            <div className="flex items-baseline mb-8 flex-wrap gap-x-2 gap-y-1">
               <span className="text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                {getFormattedPrice(
-                  billingCycle === 'monthly' ? currentPrice.monthly : currentPrice.yearly,
-                  currency
-                )}
+                {getFormattedPrice(finalPriceValue, currency)}
               </span>
-              <span className="text-sm font-mono text-neutral-400 dark:text-neutral-500 ml-1">
+              {hasDiscount && (
+                <span className="line-through text-neutral-400 dark:text-neutral-500 text-lg md:text-xl font-normal">
+                  {getFormattedPrice(basePriceValue, currency)}
+                </span>
+              )}
+              <span className="text-sm font-mono text-neutral-400 dark:text-neutral-500 ml-0.5">
                 {getPeriodText()}
               </span>
             </div>
