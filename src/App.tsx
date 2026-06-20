@@ -225,6 +225,92 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewAdmin, viewPartners, viewArtists]);
 
+  // Elite Dynamic Search Engine Optimization (SEO) Side Effect Engine
+  useEffect(() => {
+    try {
+      const isRu = lang === 'RU';
+      let title = '';
+      let desc = '';
+
+      if (viewAdmin) {
+        title = isRu ? "NIGHTVOLT — Панель управления администратора" : "NIGHTVOLT — Admin Operations Dashboard";
+        desc = isRu ? "Операционная консоль для управления музыкальным дистрибьютором и лейблом NIGHTVOLT." : "Operational operations console for digital distribute network, artist contracts, and metadata validation.";
+      } else if (viewPromoTools) {
+        title = isRu ? "Умные промо-инструменты для продвижения музыки — NIGHTVOLT" : "Smart Music Promotion Tools — NIGHTVOLT";
+        desc = isRu ? "Продвигайте свои песни бесплатно с помощью встроенных инструментов NIGHTVOLT: смарт-линки, сбор статистики, подача заявок на питчинг в плейлисты." : "Free smart tools for tracking media performance, compiling multi-links, pitching releases to curators.";
+      } else if (viewAbout) {
+        title = isRu ? "О нашей музыкальной платформе и ценностях — NIGHTVOLT" : "About Our Music Platform & Mission — NIGHTVOLT";
+        desc = isRu ? "Познакомьтесь с командой музыкального дистрибьютора NIGHTVOLT, нашей историей, философией и стандартами качественной отгрузки звука." : "Read the core background stories, hardware delivery standards, and artistic commitments of NIGHTVOLT.";
+      } else if (viewVacancies) {
+        title = isRu ? "Карьера и открытые вакансии в нашей команде — NIGHTVOLT" : "Careers & Team Openings — NIGHTVOLT";
+        desc = isRu ? "Станьте частью команды NIGHTVOLT. Ищем модераторов, кураторов плейлистов, юристов по авторским правам и талантливых разработчиков." : "Active openings inside records moderation, visual curation, legal assistance, or web engineering.";
+      } else if (viewPartners) {
+        title = isRu ? "Наши официальные лейблы-партнеры — NIGHTVOLT" : "Official Record Label Partners — NIGHTVOLT";
+        desc = isRu ? "Сообщество партнерских музыкальных объединений, звукозаписывающих студий и медиа-групп, сотрудничающих с платформой NIGHTVOLT." : "Ecosystem of independent labels, recording properties, and publishing catalogs united with NIGHTVOLT.";
+      } else if (viewArtists) {
+        title = isRu ? "Резиденты и каталог музыкального лейбла — NIGHTVOLT" : "Resident Artists & Catalogue — NIGHTVOLT";
+        desc = isRu ? "Каталог независимых артистов мирового уровня, выпускающих свою музыку через NIGHTVOLT. Слушайте наши новинки во всех сервисах." : "Explore independent songwriters, top producers, and official album releases powered by NIGHTVOLT.";
+      } else if (viewTerms) {
+        if (activeLegalTab === 'platform' || activeLegalTab === 'terms') {
+          title = isRu ? "Пользовательское соглашение платформы — NIGHTVOLT" : "Platform Terms & User Agreement — NIGHTVOLT";
+          desc = isRu ? "Правовые положения и правила пользования дистрибуционной системой и сайтом NIGHTVOLT." : "Legal terms of membership, intellectual usage, and digital security of NIGHTVOLT system.";
+        } else if (activeLegalTab === 'agreement') {
+          title = isRu ? "Лицензионный договор-оферта — NIGHTVOLT" : "Music Licensing Offer Agreement — NIGHTVOLT";
+          desc = isRu ? "Договор о предоставлении дистрибуционных услуг, роялти-сплитах 80/20 и сохранении 100% авторских прав артиста." : "The official distributor and artist contract detailing 80/20 splits, digital royalties, and ownership guarantees.";
+        } else if (activeLegalTab === 'privacy') {
+          title = isRu ? "Политика конфиденциальности личных данных — NIGHTVOLT" : "Personal Data Privacy Policy — NIGHTVOLT";
+          desc = isRu ? "Заявление о защите персональной информации, хранении паролей и безопасности транзакций создателей контента." : "Detailed disclosure of identity safety, session cookies storage, and secured data operations.";
+        } else if (activeLegalTab === 'dmca') {
+          title = isRu ? "Защита авторских прав и политика DMCA — NIGHTVOLT" : "Copyright Protection & DMCA Policy — NIGHTVOLT";
+          desc = isRu ? "Форма подачи претензий по нарушению интеллектуальной собственности и защита оригинальных фонограмм." : "Instructions on active copyright defense, takedown notices, and counterfeit prevention mechanisms.";
+        } else {
+          title = isRu ? "Юридические соглашения и документы — NIGHTVOLT" : "Legal Policy Documentation Workspace — NIGHTVOLT";
+          desc = isRu ? "Свод юридических документов музыкального дистрибьютора NIGHTVOLT." : "Official agreement indexes, licensing contracts, privacy statements.";
+        }
+      } else {
+        // Home mainpage
+        title = isRu ? "NIGHTVOLT — Музыкальный дистрибьютор & Музыкальный лейбл" : "NIGHTVOLT — Digital Music Distribution & Record Label";
+        desc = isRu ? "Выпустите свои треки на Яндекс Музыку, ВК Музыку, Spotify и Apple Music бесплатно с сохранением 100% прав и получением 80% роялти за 3 дня!" : "Modern music distributor and digital developer. Release your songs worldwide in 3 days, retain 100% master rights, enjoy 80/20 earnings.";
+      }
+
+      // 1. Sync Document Title
+      document.title = title;
+
+      // 2. Sync Meta Description
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', desc);
+
+      // 3. Sync OpenGraph & Twitter Metas for gorgeous social snippets
+      const metars = [
+        { key: 'property', val: 'og:title', content: title },
+        { key: 'property', val: 'og:description', content: desc },
+        { key: 'name', val: 'twitter:title', content: title },
+        { key: 'name', val: 'twitter:description', content: desc }
+      ];
+
+      metars.forEach(m => {
+        let el = document.querySelector(`meta[${m.key}="${m.val}"]`);
+        if (!el) {
+          el = document.createElement('meta');
+          el.setAttribute(m.key, m.val);
+          document.head.appendChild(el);
+        }
+        el.setAttribute('content', m.content);
+      });
+
+      // 4. Update core language attribute for Google Translate and Search Engines
+      document.documentElement.lang = isRu ? 'ru' : 'en';
+
+    } catch (e) {
+      console.error("SEO sync error", e);
+    }
+  }, [lang, viewAdmin, viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewPartners, viewArtists]);
+
   return (
     <div id="site-root-container" className={`min-h-screen relative overflow-x-hidden transition-colors duration-500 selection:bg-brand-blue selection:text-white ${theme === 'dark' ? 'dark bg-[#0c0d0e] text-neutral-100' : 'bg-[#fafafc] text-neutral-800'}`}>
       
