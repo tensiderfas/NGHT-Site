@@ -707,22 +707,31 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
       
       const userRef = doc(db, 'admins', cleanEmail);
       const userDoc = await getDoc(userRef);
-      if (userDoc.exists()) {
-        throw new Error(isRu ? "Email администратора уже зарегистрирован. Пожалуйста, войдите в систему." : "Admin email already registered. Please sign in instead.");
-      }
-
       const hash = await hashPassword(passwordInput);
       
-      await setDoc(userRef, {
-        email: cleanEmail,
-        passwordHash: hash,
-        createdAt: serverTimestamp(),
-      });
-      
-      setAuthSuccessMsg(isRu
-        ? 'Учетная запись создана! Введите ваш логин/пароль повторно и нажмите кнопку ВОЙТИ.'
-        : 'Account created! Enter your credentials again and click LOGIN.'
-      );
+      if (userDoc.exists()) {
+        await setDoc(userRef, {
+          email: cleanEmail,
+          passwordHash: hash,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        
+        setAuthSuccessMsg(isRu
+          ? 'Пароль успешно обновлен! Введите логин и ваш новый пароль для входа.'
+          : 'Password updated successfully! Enter your new password and click LOGIN.'
+        );
+      } else {
+        await setDoc(userRef, {
+          email: cleanEmail,
+          passwordHash: hash,
+          createdAt: serverTimestamp(),
+        });
+        
+        setAuthSuccessMsg(isRu
+          ? 'Учетная запись создана! Введите ваш логин/пароль повторно и нажмите кнопку ВОЙТИ.'
+          : 'Account created! Enter your credentials again and click LOGIN.'
+        );
+      }
     } catch (err: any) {
       console.error('Registration error:', err);
       setAuthError(err.message || String(err));
