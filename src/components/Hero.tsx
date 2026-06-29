@@ -73,15 +73,27 @@ export default function Hero({ lang, onScrollTo }: HeroProps) {
       <div className="max-w-[1250px] mx-auto w-full flex-grow flex flex-col justify-center relative z-10 py-12 text-center">
         <div className="flex flex-col items-center gap-6">
           
-          {/* Label Badge */}
+          {/* Label Badge & Emails Container */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 bg-neutral-50/80 border border-neutral-200 rounded-full font-mono text-[9px] font-bold tracking-[0.25em] text-neutral-600 dark:bg-neutral-900/60 dark:border-neutral-800 dark:text-neutral-400 uppercase"
+            className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-center"
           >
-            <Sparkles className="w-3.5 h-3.5 text-brand-orange fill-brand-orange animate-pulse" />
-            <span className="text-neutral-800 dark:text-neutral-200">{t.labelBadge}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-neutral-50/80 border border-neutral-200 rounded-full font-mono text-[9px] font-bold tracking-[0.25em] text-neutral-600 dark:bg-neutral-900/60 dark:border-neutral-800 dark:text-neutral-400 uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-brand-orange fill-brand-orange animate-pulse" />
+              <span className="text-neutral-800 dark:text-neutral-200">{t.labelBadge}</span>
+            </div>
+            
+            <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-neutral-50/50 border border-neutral-200/50 rounded-full font-mono text-[10px] text-neutral-600 dark:bg-neutral-900/40 dark:border-neutral-800/60 dark:text-neutral-400">
+              <a href="mailto:nightvolt@internet.ru" className="hover:text-brand-orange transition-colors font-semibold">
+                nightvolt@internet.ru
+              </a>
+              <span className="text-neutral-300 dark:text-neutral-700">|</span>
+              <a href="mailto:label@nightvolt.ru" className="hover:text-brand-orange transition-colors font-semibold">
+                label@nightvolt.ru
+              </a>
+            </div>
           </motion.div>
 
           {/* Glitch heading (lags and unlags, with manual preview trigger on hover) */}

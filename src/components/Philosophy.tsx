@@ -151,7 +151,7 @@ export default function Philosophy({ lang }: PhilosophyProps) {
 
         {/* Beautiful info bar */}
         <div className="mt-16 border-t border-neutral-200 dark:border-neutral-800 pt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-[10px] font-mono text-[#7e8c9c] tracking-wider uppercase">
-          <span>{isRu ? 'БЕЗСКРЫТЫХ ПЛАТЕЖЕЙ И СЛОЖНЫХ СХЕМ' : 'NO HIDDEN PAYMENTS OR COMPLEX PLANS'}</span>
+          <span>{isRu ? 'БЕЗ СКРЫТЫХ ПЛАТЕЖЕЙ И СЛОЖНЫХ СХЕМ' : 'NO HIDDEN PAYMENTS OR COMPLEX PLANS'}</span>
           <span>{isRu ? 'ПРОСТОЙ ДОГОВОР НА ДИСТРИБУЦИЮ' : 'SIMPLIFIED DISTRIBUTION AGREEMENT'}</span>
         </div>
 
