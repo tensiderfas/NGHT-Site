@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Check, ArrowRight, Sparkles, BarChart3, ShieldCheck, Share2, DollarSign } from 'lucide-react';
+import React from 'react';
+import { 
+  Check, 
+  Sparkles, 
+  ShieldCheck, 
+  Share2, 
+  DollarSign, 
+  FileText,
+  Clock,
+  Tags,
+  Music
+} from 'lucide-react';
 import { translations } from '../translations';
 
 interface ServicesProps {
@@ -8,180 +17,309 @@ interface ServicesProps {
 }
 
 export default function Services({ lang }: ServicesProps) {
-  const [activeIdx, setActiveIdx] = useState(0);
   const isRu = lang === 'RU';
   const t = translations[lang];
-
-  const services = [
-    {
-      title: t.serv1Title,
-      description: t.serv1Desc,
-      icon: Share2,
-      details: t.serv1Details,
-      metaCode: isRu ? "ДИСТРИБУЦИЯ // WEB DELIVERY" : "DISTRIBUTION // WEB DELIVERY"
-    },
-    {
-      title: t.serv2Title,
-      description: t.serv2Desc,
-      icon: BarChart3,
-      details: t.serv2Details,
-      metaCode: isRu ? "СТАТИСТИКА // DETAILED ANALYTICS" : "ANALYTICS // DETAILED STATS"
-    },
-    {
-      title: t.serv3Title,
-      description: t.serv3Desc,
-      icon: DollarSign,
-      details: t.serv3Details,
-      metaCode: isRu ? "АВТОМАТ СПЛИТОВ // REVENUE SPLITS" : "REVENUE SPLITS // AUTOMATION"
-    },
-    {
-      title: t.serv4Title,
-      description: t.serv4Desc,
-      icon: ShieldCheck,
-      details: t.serv4Details,
-      metaCode: isRu ? "ЗАЩИТА ПРАВ // CONTENT PROTECTION" : "COPYRIGHT // RIGHTS PROTECTION"
-    },
-    {
-      title: t.expandedPromoTitle,
-      description: t.expandedPromoDesc,
-      icon: Sparkles,
-      details: t.expandedPromoDetails,
-      metaCode: isRu ? "ПРОДВИЖЕНИЕ // MUSIC PROMOTION" : "PROMOTION // MUSIC PROMOTION"
-    }
-  ];
 
   return (
     <section
       id="services"
-      className="py-24 md:py-32 px-6 md:px-12 bg-transparent relative block border-b border-neutral-200/50"
+      className="py-24 md:py-32 px-6 md:px-12 bg-neutral-50 dark:bg-neutral-950 relative block border-b border-neutral-200/60 dark:border-neutral-900/60 overflow-hidden"
     >
-      {/* Decorative vertical architectural line overlays */}
-      <div className="absolute top-0 bottom-0 left-[8%] w-[1px] bg-neutral-200/10 pointer-events-none hidden md:block" />
-      <div className="absolute top-0 bottom-0 right-[8%] w-[1px] bg-neutral-200/10 pointer-events-none hidden md:block" />
+      {/* Background elegant decoration */}
+      <div className="absolute top-1/4 right-[-5%] w-[400px] h-[400px] rounded-full bg-brand-blue/5 dark:bg-brand-blue/10 filter blur-[120px] pointer-events-none" />
 
       <div className="max-w-[1250px] mx-auto relative z-10">
         
-        {/* Module Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16">
+        {/* Module Header with sleek asymmetric divider */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16 border-b border-neutral-200/60 dark:border-neutral-900/60 pb-10">
           <div>
-            <div className="flex items-center gap-2 text-[#7e8c9c] font-mono text-[10px] tracking-[0.2em] mb-4 uppercase">
-              <span className="w-1.5 h-1.5 bg-brand-orange rounded-full animate-pulse" />
+            <div className="flex items-center gap-2 text-[#7e8c9c] font-mono text-[10px] tracking-[0.25em] mb-4 uppercase font-bold text-left">
+              <span className="w-1.5 h-1.5 bg-brand-blue rounded-full" />
               <span>{t.servBadge}</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-none text-neutral-950 uppercase">
+            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-tight text-neutral-950 dark:text-white uppercase text-left">
               {t.servHeading}
             </h2>
           </div>
           <div className="md:text-right">
-            <span className="text-xs font-mono tracking-widest text-[#7e8c9c] font-bold uppercase">{t.servSubtext}</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono tracking-widest text-[#7e8c9c] font-bold uppercase">
+              <span className="w-1 h-1 rounded-full bg-brand-turquoise" />
+              {isRu ? "// СИСТЕМА И ТЕХНОЛОГИИ" : "// ARCHITECTURE & CORE TECH"}
+            </span>
           </div>
         </div>
 
-        {/* Bento Service Configuration */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch pt-4">
+        {/* Master Bento Grid Architecture - Premium Redesign */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
-          {/* Left Column - Service Selector Tabs */}
-          <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-3 justify-center">
-            {services.map((service, idx) => {
-              const isActive = activeIdx === idx;
-              const IconComponent = service.icon;
-              return (
-                <button
-                  key={service.title}
-                  onClick={() => setActiveIdx(idx)}
-                  onMouseEnter={() => setActiveIdx(idx)}
-                  className={`w-full p-5 text-left border rounded-3xl transition-all duration-300 relative overflow-hidden cursor-pointer ${
-                    isActive
-                      ? 'bg-brand-blue border-brand-blue text-white shadow-xl shadow-brand-blue/15'
-                      : 'bg-[#fafafc] border-neutral-200/80 text-neutral-800 hover:border-brand-blue/30 hover:bg-neutral-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between pointer-events-none">
-                    <span className="font-mono text-[9px] tracking-wider text-[#7e8c9c] font-bold uppercase">
-                      {service.metaCode}
-                    </span>
-                    <ArrowRight className={`w-4 h-4 transition-transform duration-300 ${
-                      isActive ? 'translate-x-0 opacity-100 text-brand-orange' : '-translate-x-2 opacity-0 text-[#7e8c9c]'
-                    }`} />
-                  </div>
-                  
-                  <div className="flex items-center gap-2.5 mt-3 pointer-events-none">
-                    <div className={`p-1.5 rounded-lg transition-colors duration-350 ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-brand-blue/10 text-brand-blue'
-                    }`}>
-                      <IconComponent className="w-4 h-4 stroke-[2.25]" />
-                    </div>
-                    <h3 className="font-display text-sm md:text-base font-black tracking-wide uppercase leading-none">
-                      {service.title}
-                    </h3>
-                  </div>
-
-                  <p className={`text-xs mt-2.5 leading-relaxed pointer-events-none ${
-                    isActive ? 'text-neutral-300 font-light' : 'text-neutral-500 font-light'
-                  }`}>
-                    {service.description}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right Column - Active Service details */}
-          <div className="lg:col-span-12 xl:col-span-7 bg-[#fafafc] border border-neutral-200/80 rounded-4xl p-8 md:p-12 flex flex-col justify-between relative min-h-[440px] overflow-hidden">
+          {/* Card 1: Global Distribution (Double Column Span: 7) */}
+          <div className="lg:col-span-7 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/60 rounded-4xl p-8 md:p-10 shadow-sm relative overflow-hidden group flex flex-col justify-between hover:border-brand-blue/30 dark:hover:border-brand-blue/20 transition-all duration-300">
+            {/* Subtle hover top bar accent */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-blue to-brand-turquoise scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 z-30" />
             
-            <div className="absolute top-0 right-0 w-28 h-24 border-b border-l border-neutral-200/40 pointer-events-none flex items-center justify-center font-mono text-[8px] text-neutral-400 font-bold uppercase rounded-bl-3xl bg-white/50">
-              NIGHTVOLT
+            <div className="space-y-6 text-left">
+              <div className="flex items-center gap-4">
+                <div className="p-3.5 bg-brand-blue/10 dark:bg-brand-blue/15 border border-brand-blue/20 dark:border-brand-blue/30 rounded-2xl text-brand-blue animate-pulse">
+                  <Share2 className="w-6 h-6 stroke-[2]" />
+                </div>
+                <div>
+                  <h3 className="font-display text-xl md:text-2xl font-black text-neutral-950 dark:text-white uppercase tracking-wide">
+                    {t.serv1Title}
+                  </h3>
+                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono uppercase mt-0.5 tracking-wider">
+                    {isRu ? "ГЛОБАЛЬНАЯ ОТГРУЗКА" : "GLOBAL DISTRIBUTION SERVICE"}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-sm text-neutral-700 dark:text-neutral-300 font-normal leading-relaxed max-w-[620px]">
+                {t.serv1Desc}
+              </p>
+
+              {/* Delivery specifications table */}
+              <div className="py-5 border-y border-neutral-200/60 dark:border-neutral-800/60 my-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="text-left">
+                    <span className="block font-mono text-[9px] text-[#7e8c9c] uppercase font-bold tracking-wider">{isRu ? "ПЛОЩАДКИ" : "STORES"}</span>
+                    <span className="block font-display text-sm font-bold text-neutral-950 dark:text-white uppercase mt-0.5">180+ Platforms</span>
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-mono text-[9px] text-[#7e8c9c] uppercase font-bold tracking-wider">{isRu ? "КАЧЕСТВО" : "AUDIO QUALITY"}</span>
+                    <span className="block font-display text-sm font-bold text-neutral-950 dark:text-white uppercase mt-0.5">Lossless WAV</span>
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-mono text-[9px] text-[#7e8c9c] uppercase font-bold tracking-wider">{isRu ? "СРОК СДАЧИ" : "SPEED"}</span>
+                    <span className="block font-display text-sm font-bold text-neutral-950 dark:text-white uppercase mt-0.5">From 3 Days</span>
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-mono text-[9px] text-[#7e8c9c] uppercase font-bold tracking-wider">{isRu ? "КОДЫ" : "CODES"}</span>
+                    <span className="block font-display text-sm font-bold text-neutral-950 dark:text-white uppercase mt-0.5">UPC & ISRC Free</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Specific features list */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                {t.serv1Details.slice(0, 4).map((detail, idx) => (
+                  <div key={idx} className="flex items-start gap-2.5 text-left">
+                    <div className="w-5 h-5 rounded-full bg-brand-blue/10 dark:bg-brand-blue/15 border border-brand-blue/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-brand-blue stroke-[3]" />
+                    </div>
+                    <span className="text-xs text-neutral-800 dark:text-neutral-300 font-normal leading-snug">
+                      {detail}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeIdx}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="flex-grow flex flex-col justify-between"
-              >
+            <div className="mt-8 pt-6 border-t border-neutral-200/50 dark:border-neutral-800/60 flex items-center justify-between text-[10px] font-mono text-neutral-500 uppercase tracking-wider">
+              <span>{isRu ? "СТАНДАРТ: FLAC / WAV 24BIT" : "STD: LOSSLESS WAV 24BIT"}</span>
+              <span className="text-brand-blue font-bold">{isRu ? "ПРЯМАЯ ОТГРУЗКА" : "DIRECT INGEST"}</span>
+            </div>
+          </div>
+
+          {/* Card 2: Metadata integrity (Column Span: 5) */}
+          <div className="lg:col-span-5 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/60 rounded-4xl p-8 md:p-10 shadow-sm relative overflow-hidden group flex flex-col justify-between hover:border-brand-turquoise/30 dark:hover:border-brand-turquoise/20 transition-all duration-300">
+            {/* Subtle hover top bar accent */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-turquoise to-brand-blue scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 z-30" />
+            
+            <div className="space-y-6 text-left">
+              <div className="flex items-center gap-4">
+                <div className="p-3.5 bg-brand-turquoise/10 dark:bg-brand-turquoise/15 border border-brand-turquoise/20 dark:border-brand-turquoise/30 rounded-2xl text-brand-turquoise">
+                  <Tags className="w-6 h-6 stroke-[2]" />
+                </div>
                 <div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 bg-brand-orange rounded-full animate-pulse" />
-                    <span className="font-mono text-[10px] text-brand-orange tracking-widest uppercase font-bold">
-                      {t.servDetailBlueprint}
-                    </span>
-                  </div>
-
-                  <h3 className="font-display text-lg md:text-3xl font-black text-neutral-950 mt-6 tracking-wide uppercase leading-none">
-                    {services[activeIdx].title}
+                  <h3 className="font-display text-xl md:text-2xl font-black text-neutral-950 dark:text-white uppercase tracking-wide">
+                    {t.serv2Title}
                   </h3>
-                  
-                  <p className="text-xs md:text-sm text-neutral-500 font-light tracking-wide mt-3.5 leading-relaxed max-w-[520px]">
-                    {services[activeIdx].description}
+                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono uppercase mt-0.5 tracking-wider">
+                    {isRu ? "СТАНДАРТЫ DDEX" : "CREDIT INTEGRITY SCHEMA"}
                   </p>
+                </div>
+              </div>
 
-                  <div className="h-[1px] bg-neutral-200/70 my-6" />
+              <p className="text-sm text-neutral-700 dark:text-neutral-300 font-normal leading-relaxed">
+                {t.serv2Desc}
+              </p>
 
-                  {/* Bullet speculative points */}
-                  <div className="flex flex-col gap-3.5">
-                    {services[activeIdx].details.map((detail, dIdx) => (
-                      <div key={dIdx} className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-brand-blue/5 border border-brand-blue/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-brand-blue stroke-[3]" />
-                        </div>
-                        <span className="text-xs md:text-sm text-neutral-700 tracking-wide font-normal">
-                          {detail}
-                        </span>
-                      </div>
-                    ))}
+              {/* Spec board - clean non-interactive spec list */}
+              <div className="bg-neutral-50 dark:bg-neutral-950 border border-neutral-200/60 dark:border-neutral-850 p-6 rounded-3xl space-y-3">
+                <div className="flex items-center justify-between text-xs border-b border-neutral-200/40 dark:border-neutral-850 pb-2">
+                  <span className="font-mono text-neutral-500 uppercase">{isRu ? "РАСПРЕДЕЛЕНИЕ" : "ROLES SUPPORT"}</span>
+                  <span className="font-bold text-neutral-900 dark:text-white uppercase">{isRu ? "Музыканты, Лирики, Авторы" : "Composers, Writers, Producers"}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs border-b border-neutral-200/40 dark:border-neutral-850 pb-2">
+                  <span className="font-mono text-neutral-500 uppercase">{isRu ? "ИНТЕГРАЦИЯ" : "INGESTION PROTOCOL"}</span>
+                  <span className="font-bold text-neutral-900 dark:text-white uppercase">DDEX XML Release v4</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-neutral-500 uppercase">{isRu ? "МОДЕРАЦИЯ" : "INTEGRITY GATEWAY"}</span>
+                  <span className="font-bold text-neutral-900 dark:text-white uppercase">{isRu ? "Ручная и автоматическая" : "Dual Human-Automated check"}</span>
+                </div>
+              </div>
+
+              {/* Checklist details */}
+              <div className="space-y-3 pt-2">
+                {t.serv2Details.slice(0, 2).map((detail, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5 text-left text-xs text-neutral-800 dark:text-neutral-300 font-normal">
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-turquoise flex-shrink-0" />
+                    <span>{detail}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-neutral-200/50 dark:border-neutral-800/60 flex justify-between items-center text-[10px] font-mono text-neutral-500">
+              <span>{isRu ? "СТАНДАРТЫ КАТАЛОГА" : "METADATA VALIDATOR"}</span>
+              <span className="text-brand-turquoise font-bold uppercase">{isRu ? "БЕЗУПРЕЧНО" : "COMPLIANT"}</span>
+            </div>
+          </div>
+
+          {/* Card 3: Pitching & Promo (Column Span: 4) */}
+          <div className="lg:col-span-4 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/60 rounded-4xl p-8 md:p-10 shadow-sm relative overflow-hidden group flex flex-col justify-between hover:border-brand-blue/30 dark:hover:border-brand-blue/20 transition-all duration-300">
+            {/* Subtle hover top bar accent */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-blue to-brand-turquoise scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 z-30" />
+            
+            <div className="space-y-6 text-left">
+              <div className="flex items-center gap-4">
+                <div className="p-3.5 bg-brand-blue/10 dark:bg-brand-blue/15 border border-brand-blue/20 dark:border-brand-blue/30 rounded-2xl text-brand-blue">
+                  <Sparkles className="w-6 h-6 stroke-[2]" />
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-black text-neutral-950 dark:text-white uppercase tracking-wide">
+                    {t.serv3Title}
+                  </h3>
+                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono uppercase mt-0.5 tracking-wider">
+                    {isRu ? "ПРОДВИЖЕНИЕ РЕЛИЗОВ" : "PLAYLIST PITCHING"}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-neutral-700 dark:text-neutral-300 font-normal leading-relaxed">
+                {t.serv3Desc}
+              </p>
+
+              {/* Specifications block */}
+              <div className="bg-neutral-50 dark:bg-neutral-950 border border-neutral-200/60 dark:border-neutral-850 p-5 rounded-3xl text-left space-y-3">
+                <span className="font-mono text-[8px] text-neutral-400 font-bold uppercase tracking-wider block">
+                  {isRu ? "ТРЕБОВАНИЯ ДЛЯ ПИТЧИНГА" : "EDITORIAL PITCHING SPECS"}
+                </span>
+                
+                <div className="space-y-2 text-xs font-mono">
+                  <div className="flex justify-between border-b border-neutral-200/40 dark:border-neutral-850 pb-1.5">
+                    <span className="text-neutral-500">{isRu ? "Сроки подачи" : "Submission lead"}</span>
+                    <span className="text-brand-blue font-bold">{isRu ? "За 14 дней" : "14 Days Prior"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-neutral-200/40 dark:border-neutral-850 pb-1.5">
+                    <span className="text-neutral-500">{isRu ? "Ключевые витрины" : "Key DSPs"}</span>
+                    <span className="text-neutral-800 dark:text-white font-bold">{isRu ? "Яндекс, ВК, Звук" : "Yandex, VK, Zvuk"}</span>
+                  </div>
+                  <div className="flex justify-between text-neutral-500">
+                    <span>{isRu ? "Стоимость услуги" : "Campaign cost"}</span>
+                    <span className="text-brand-turquoise font-bold">{isRu ? "Бесплатно" : "Free"}</span>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Simplified micro footnotes */}
-                <div className="mt-12 flex items-center justify-between font-mono text-[9px] text-[#7e8c9c] border-t border-neutral-200/60 pt-6">
-                  <span>{isRu ? 'ОТПРАВКА НА ПЛОЩАДКИ // IMMEDIATE DELIVERY' : 'STORES INGEST // IMMEDIATE DELIVERY'}</span>
-                  <span>{isRu ? 'БЕЗСКРЫТЫХ ПЛАТЕЖЕЙ // NO EXTRA FEES' : 'NO EXTRA CHARGES // SECURE VALUE'}</span>
+            <div className="mt-8 pt-5 border-t border-neutral-200/50 dark:border-neutral-800/60 text-[9px] font-mono text-neutral-500 leading-normal text-left">
+              {isRu ? "* Подача промо-заявки не гарантирует попадание в плейлист, но максимизирует шансы" : "* Pitching submission does not guarantee selection by editorial curators"}
+            </div>
+          </div>
+
+          {/* Card 4: Copyright Protection (Column Span: 4) */}
+          <div className="lg:col-span-4 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/60 rounded-4xl p-8 md:p-10 shadow-sm relative overflow-hidden group flex flex-col justify-between hover:border-brand-blue/30 dark:hover:border-brand-blue/20 transition-all duration-300">
+            {/* Subtle hover top bar accent */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-blue to-brand-turquoise scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 z-30" />
+            
+            <div className="space-y-6 text-left">
+              <div className="flex items-center gap-4">
+                <div className="p-3.5 bg-brand-blue/10 dark:bg-brand-blue/15 border border-brand-blue/20 dark:border-brand-blue/30 rounded-2xl text-brand-blue">
+                  <ShieldCheck className="w-6 h-6 stroke-[2]" />
                 </div>
-              </motion.div>
-            </AnimatePresence>
+                <div>
+                  <h3 className="font-display text-xl font-black text-neutral-950 dark:text-white uppercase tracking-wide">
+                    {t.serv4Title}
+                  </h3>
+                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono uppercase mt-0.5 tracking-wider">
+                    {isRu ? "ЗАЩИТА АВТОРСКИХ ПРАВ" : "COPYRIGHT DEFENSE ENGINE"}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-neutral-700 dark:text-neutral-300 font-normal leading-relaxed">
+                {t.serv4Desc}
+              </p>
+
+              {/* Status specifications list */}
+              <div className="bg-neutral-50 dark:bg-neutral-950 border border-neutral-200/60 dark:border-neutral-850 p-5 rounded-3xl space-y-3 font-mono text-xs">
+                <div className="flex justify-between items-center border-b border-neutral-200/40 dark:border-neutral-850 pb-1.5">
+                  <span className="text-neutral-500">YouTube Content ID</span>
+                  <span className="text-emerald-600 dark:text-emerald-500 font-bold uppercase">{isRu ? "АКТИВНО" : "ACTIVE"}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-neutral-200/40 dark:border-neutral-850 pb-1.5">
+                  <span className="text-neutral-500">TikTok Audio Match</span>
+                  <span className="text-emerald-600 dark:text-emerald-500 font-bold uppercase">{isRu ? "АКТИВНО" : "ACTIVE"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-neutral-500">Shazam Sync</span>
+                  <span className="text-emerald-600 dark:text-emerald-500 font-bold uppercase">{isRu ? "АКТИВНО" : "ACTIVE"}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-5 border-t border-neutral-200/50 dark:border-neutral-800/60 flex items-center gap-2 text-neutral-500 font-mono text-[9px] uppercase">
+              <FileText className="w-4 h-4 text-brand-blue" />
+              <span>{isRu ? "ОФИЦИАЛЬНЫЙ ЦИФРОВОЙ КОНТРАКТ" : "DIGITAL AGREEMENT"}</span>
+            </div>
+          </div>
+
+          {/* Card 5: Lyrics Delivery (Column Span: 4) */}
+          <div className="lg:col-span-4 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/60 rounded-4xl p-8 md:p-10 shadow-sm relative overflow-hidden group flex flex-col justify-between hover:border-brand-turquoise/30 dark:hover:border-brand-turquoise/20 transition-all duration-300">
+            {/* Subtle hover top bar accent */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-turquoise to-brand-blue scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 z-30" />
+            
+            <div className="space-y-6 text-left">
+              <div className="flex items-center gap-4">
+                <div className="p-3.5 bg-brand-turquoise/10 dark:bg-brand-turquoise/15 border border-brand-turquoise/20 dark:border-brand-turquoise/30 rounded-2xl text-brand-turquoise">
+                  <Music className="w-6 h-6 stroke-[2]" />
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-black text-neutral-950 dark:text-white uppercase tracking-wide">
+                    {t.expandedPromoTitle}
+                  </h3>
+                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono uppercase mt-0.5 tracking-wider">
+                    {isRu ? "ДОСТАВКА ТЕКСТОВ" : "LYRIC DISTRIBUTION"}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-neutral-700 dark:text-neutral-300 font-normal leading-relaxed">
+                {t.expandedPromoDesc}
+              </p>
+
+              {/* Promo Specification Features list */}
+              <div className="bg-neutral-50 dark:bg-neutral-950 border border-neutral-200/60 dark:border-neutral-850 p-5 rounded-3xl space-y-3 font-mono text-xs">
+                <div className="flex justify-between items-center border-b border-neutral-200/40 dark:border-neutral-850 pb-1.5">
+                  <span className="text-neutral-500">{isRu ? "СИНХРОНИЗАЦИЯ" : "KARAOKE SYNC"}</span>
+                  <span className="text-neutral-950 dark:text-white font-bold uppercase">{isRu ? "ПОСТРОЧНО" : "TIME-SYNCED"}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-neutral-200/40 dark:border-neutral-850 pb-1.5">
+                  <span className="text-neutral-500">{isRu ? "БАЗЫ ДАННЫХ" : "GLOBAL REGISTRIES"}</span>
+                  <span className="text-neutral-950 dark:text-white font-bold uppercase">Musixmatch / Genius</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-neutral-500">{isRu ? "ЭКРАНЫ СТРИМИНГОВ" : "DISPLAY VISIBILITY"}</span>
+                  <span className="text-neutral-950 dark:text-white font-bold uppercase">{isRu ? "Яндекс, ВК, Apple" : "Yandex, VK, Apple"}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-5 border-t border-neutral-200/50 dark:border-neutral-800/60 flex justify-between items-center text-[9px] font-mono text-neutral-500">
+              <span>{isRu ? "СИНХРОНИЗИРОВАННЫЙ ТЕКСТ" : "LYRICS AUTO-INGESTION"}</span>
+              <Clock className="w-4 h-4 text-brand-turquoise" />
+            </div>
           </div>
 
         </div>

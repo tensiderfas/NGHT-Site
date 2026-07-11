@@ -65,23 +65,23 @@ export const translations = {
       "Поддержка всех качественных форматов аудио (M4A, WAV, FLAC)",
       "Прозрачный расчет прибыли: 80% — артисту, 20% — платформе"
     ],
-    serv2Title: "ПОНЯТНАЯ АНАЛИТИКА",
-    serv2Desc: "Удобный личный кабинет покажет подробную статистику прослушиваний ваших треков и начисления роялти.",
+    serv2Title: "СТАНДАРТЫ МЕТАДАННЫХ",
+    serv2Desc: "Профессиональное оформление и доставка релизов по международным стандартам DDEX для безупречной идентификации.",
     serv2Details: [
-      "Ежедневное обновление данных по прослушиваниям",
-      "Статистика популярности по городам и демографии",
-      "Просмотр попадания треков в официальные плейлисты площадок",
-      "Выгрузка финансовых отчетов в пару кликов",
-      "Полная детализация стриминга из любой страны"
+      "Точное указание авторов музыки, слов, продюсеров и исполнителей",
+      "Полное соответствие современным требованиям цифровых площадок",
+      "Предотвращение ошибок при распределении смежных прав",
+      "Официальный учет каждого участника записи",
+      "Чистота метаданных для беспрепятственного прохождения модерации"
     ],
-    serv3Title: "АВТОМАТ СПЛИТОВ",
-    serv3Desc: "Инструмент для быстрого деления доходов между соавторами, музыкантами и продюсерами без лишней бумажной работы.",
+    serv3Title: "ПИТЧИНГ И ПРОМО",
+    serv3Desc: "Подача промо-заявок напрямую редакторам стриминговых сервисов для поддержки новых релизов и попадания в плейлисты.",
     serv3Details: [
-      "Автоматический расчет долей для всех участников релиза",
-      "Удобный личный кабинет у каждого соавтора",
-      "Прозрачное распределение согласно выбранным долям",
-      "Удобный вывод средств без лишних хлопот",
-      "История всех выплат и прозрачный баланс"
+      "Прямой питчинг в Яндекс Музыку, ВК Музыку и Звук",
+      "Рекомендация подавать за 14 дней для полноценного питчинга",
+      "Попадание в персонализированные радары и плейлисты новинок",
+      "Помощь в оформлении маркетинговой анкеты артиста",
+      "Полностью бесплатное промо для наших резидентов"
     ],
     serv4Title: "ЗАЩИТА АВТОРСКИХ ПРАВ",
     serv4Desc: "Обеспечьте юридическую чистоту контента и получайте монетизацию со всех видео, соцсетей и вирусных роликов.",
@@ -94,15 +94,15 @@ export const translations = {
     ],
 
     // Expanded Services requested
-    expandedPromoTitle: "СМАРТ-ПРОМО ТЕХНОЛОГИИ",
-    expandedPromoDesc: "Готовые промо-инструменты для продвижения вашей музыки в социальных сетях и на платформах.",
+    expandedPromoTitle: "СИНХРОНИЗАЦИЯ ТЕКСТОВ",
+    expandedPromoDesc: "Доставка синхронизированных текстов песен (караоке-формат) на ключевые стриминговые платформы.",
     expandedPromoDetails: [
-      "Автоматическая сборка удобных мультиссылок на релизы за 10 секунд",
-      "Прямая подача заявок на питчинг редакторам Яндекс Музыки и ВК Музыки",
-      "Удобные шаблоны для создания промо-материалов",
-      "Возможность протестировать обложку и сниппет до официального выхода"
+      "Трансляция текстов в Apple Music, Яндекс Музыке и ВК Музыке",
+      "Интеграция с крупнейшей базой данных Musixmatch и Genius",
+      "Синхронизация по времени (time-sync) для караоке в реальном времени",
+      "Повышение вовлеченности слушателей и вирусного потенциала в соцсетях"
     ],
-    expandedPromoBadge: "АКТИВНОЕ ПРОДВИЖЕНИЕ",
+    expandedPromoBadge: "ДОСТАВКА ТЕКСТОВ",
 
     // Artists section
     artBadge: "НАШИ РЕЗИДЕНТЫ",
@@ -159,7 +159,7 @@ export const translations = {
       "Максимальная скорость доставки: по ситуации от 5 до 14 дней (рекомендуем за 14 дней подавать)",
       "Добавление текста песни на площадки",
       "Подача заявок на промо-поддержку в редакционные плейлисты стримингов",
-      "Ежедневная продвинутая аналитика в личном кабинете",
+      "Присвоение и проверка кодов ISRC и UPC",
       "Приоритетная поддержка артистов 24/7 (Telegram и чат)",
       "Приоритетный вывод средств без задержек"
     ],
@@ -238,23 +238,23 @@ export const translations = {
       "Full support of premium audio quality files (M4A, WAV, FLAC)",
       "Transparent income sharing: 80% goes to the artist, 20% to the label"
     ],
-    serv2Title: "CLEAR ANALYTICS",
-    serv2Desc: "A convenient private account shows detailed statistics on track plays and royalty payouts.",
+    serv2Title: "METADATA INTEGRITY",
+    serv2Desc: "Professional registration and distribution of releases following strict global DDEX metadata standards.",
     serv2Details: [
-      "Daily updates of statistics and listening charts",
-      "Popularity tracker by cities, age, and demographic density",
-      "Track placements and updates on editorial playlists",
-      "Download financial and tax summaries in a few clicks",
-      "Complete stream breakdowns from any region"
+      "Accurate songwriter, composer, producer, and performer credits",
+      "Full compliance with international streaming standards",
+      "Prevention of downstream royalty tracking and collection errors",
+      "Official accounting of every contributor in the recording process",
+      "Clean metadata schemas for high-speed automated moderation queues"
     ],
-    serv3Title: "SMART REVENUE SPLITS",
-    serv3Desc: "Save time on accounting. Set up automatic revenue shares between team members in seconds.",
+    serv3Title: "PITCHING & PROMO",
+    serv3Desc: "Direct editorial submissions to streaming platform curators to pitch your new releases for playlists.",
     serv3Details: [
-      "Automated revenue calculation for all writers and performers",
-      "Personal dashboard for each co-creator",
-      "Transparent sharing according to specified rates",
-      "Easy and swift withdrawals with zero hassle",
-      "Full payouts history and digital balance tracking"
+      "Direct pitching channels for Yandex Music, VK, and Zvuk",
+      "Recommended 14-day lead time for optimal curation review",
+      "Organic entry into release radars and smart recommendations",
+      "Assistance in writing promotional hooks and press notes",
+      "100% complimentary pitching support for our residents"
     ],
     serv4Title: "RIGHTS & CONTENT ID",
     serv4Desc: "Establish absolute copyright security and monetize your tracks across social media and user videos.",
@@ -267,15 +267,15 @@ export const translations = {
     ],
 
     // Expanded Services requested
-    expandedPromoTitle: "SMART PROMO TOOLS",
-    expandedPromoDesc: "Ready-to-use smart marketing toolkits to promote your releases on social media.",
+    expandedPromoTitle: "LYRICS SYNCHRONIZATION",
+    expandedPromoDesc: "Direct delivery of time-synced song lyrics in karaoke format to major streaming platforms globally.",
     expandedPromoDetails: [
-      "Automatic generation of comfortable promo links in just 10 seconds",
-      "Direct pitching options to curators of Yandex Music and VK Music",
-      "Easy templates for generating social media assets",
-      "Options to check covers and preview snippets prior to official release"
+      "Syncing lyrics to Apple Music, Yandex Music, and VK Music",
+      "Integration with global databases like Musixmatch and Genius",
+      "Precise time-synced (karaoke style) playback alignment",
+      "Increased listener retention and social media shareability"
     ],
-    expandedPromoBadge: "ACTIVE PROMOTION",
+    expandedPromoBadge: "LYRICS SYNC",
 
     // Artists section
     artBadge: "OUR RESIDENTS",
@@ -332,7 +332,7 @@ export const translations = {
       "Maximum delivery speed: 5 to 14 days depending on store (recommend 14 days in advance)",
       "Adding song lyrics to streaming services",
       "Promotional pitch submissions for streaming editorial playlists",
-      "Daily advanced analytics in dashboard",
+      "ISRC and UPC codes verification",
       "Priority human support response 24/7 (via Telegram/Chat)",
       "Priority payouts with zero processing delays"
     ],

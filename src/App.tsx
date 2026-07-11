@@ -12,6 +12,7 @@ import AboutTeaser from './components/AboutTeaser';
 import ContractSubmission from './components/ContractSubmission';
 import MarketingSuite from './components/MarketingSuite';
 import FAQ from './components/FAQ';
+import FAQPage from './components/FAQPage';
 import Footer from './components/Footer';
 import DistributionTerms from './components/DistributionTerms';
 import CustomCursor from './components/CustomCursor';
@@ -41,6 +42,7 @@ export default function App() {
   const [viewAdmin, setViewAdmin] = useState(false);
   const [viewPartners, setViewPartners] = useState(false);
   const [viewArtists, setViewArtists] = useState(false);
+  const [viewFAQ, setViewFAQ] = useState(false);
 
   // Sync state with DOM element of html
   useEffect(() => {
@@ -87,6 +89,9 @@ export default function App() {
     if (path.startsWith('/promo') || path.startsWith('/marketing') || isSubdomain('promo') || isSubdomain('marketing')) {
       return { page: 'promo' as const, tab: '' };
     }
+    if (path.startsWith('/faq') || isSubdomain('faq') || hash === '#faq-hub') {
+      return { page: 'faq' as const, tab: '' };
+    }
     
     // Legal subdivisions
     if (path.startsWith('/platform')) {
@@ -109,7 +114,7 @@ export default function App() {
   };
 
   // Safe router navigation dispatcher
-  const navigate = (page: 'home' | 'admin' | 'artists' | 'partners' | 'vacancies' | 'about' | 'promo' | 'terms', tab: string = '') => {
+  const navigate = (page: 'home' | 'admin' | 'artists' | 'partners' | 'vacancies' | 'about' | 'promo' | 'terms' | 'faq', tab: string = '') => {
     let newPath = '/';
     if (page === 'admin') newPath = '/admin';
     else if (page === 'artists') newPath = '/artists';
@@ -117,6 +122,7 @@ export default function App() {
     else if (page === 'vacancies') newPath = '/vacancies';
     else if (page === 'about') newPath = '/about';
     else if (page === 'promo') newPath = '/promo';
+    else if (page === 'faq') newPath = '/faq';
     else if (page === 'terms') {
       if (tab && tab !== 'terms') {
         newPath = `/${tab}`;
@@ -136,6 +142,7 @@ export default function App() {
     setViewAbout(page === 'about');
     setViewPromoTools(page === 'promo');
     setViewTerms(page === 'terms');
+    setViewFAQ(page === 'faq');
     if (page === 'terms' && tab) {
       setActiveLegalTab(tab as any);
     }
@@ -152,6 +159,7 @@ export default function App() {
       setViewAbout(resolved.page === 'about');
       setViewPromoTools(resolved.page === 'promo');
       setViewTerms(resolved.page === 'terms');
+      setViewFAQ(resolved.page === 'faq');
       if (resolved.page === 'terms' && resolved.tab) {
         setActiveLegalTab(resolved.tab as any);
       }
@@ -193,9 +201,13 @@ export default function App() {
     navigate('artists');
   };
 
+  const handleNavigateToFAQ = () => {
+    navigate('faq');
+  };
+
             {/* Global smooth navigation scroll assistance */}
   const handleScrollTo = (selector: string) => {
-    if (viewTerms || viewPromoTools || viewAbout || viewVacancies || viewAdmin || viewPartners || viewArtists) {
+    if (viewTerms || viewPromoTools || viewAbout || viewVacancies || viewAdmin || viewPartners || viewArtists || viewFAQ) {
       navigate('home');
       // Wait minor duration for component unmount/mount to complete, then slide
       setTimeout(() => {
@@ -223,7 +235,7 @@ export default function App() {
   // Auto scroll to top when changing sub-views or active tab
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewAdmin, viewPartners, viewArtists]);
+  }, [viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewAdmin, viewPartners, viewArtists, viewFAQ]);
 
   // Elite Dynamic Search Engine Optimization (SEO) Side Effect Engine
   useEffect(() => {
@@ -236,8 +248,8 @@ export default function App() {
         title = isRu ? "NIGHTVOLT — Панель управления администратора" : "NIGHTVOLT — Admin Operations Dashboard";
         desc = isRu ? "Операционная консоль для управления музыкальным дистрибьютором и лейблом NIGHTVOLT." : "Operational operations console for digital distribute network, artist contracts, and metadata validation.";
       } else if (viewPromoTools) {
-        title = isRu ? "Умные промо-инструменты для продвижения музыки — NIGHTVOLT" : "Smart Music Promotion Tools — NIGHTVOLT";
-        desc = isRu ? "Продвигайте свои песни бесплатно с помощью встроенных инструментов NIGHTVOLT: смарт-линки, сбор статистики, подача заявок на питчинг в плейлисты." : "Free smart tools for tracking media performance, compiling multi-links, pitching releases to curators.";
+        title = isRu ? "Продвижение и тексты песен на стримингах — NIGHTVOLT" : "Lyrics Sync & Music Promotion — NIGHTVOLT";
+        desc = isRu ? "Доставляйте синхронизированные тексты песен на платформы и подавайте заявки на питчинг в плейлисты с NIGHTVOLT." : "Deliver time-synced lyrics to major streaming stores and manage editorial pitching workflows easily.";
       } else if (viewAbout) {
         title = isRu ? "О нашей музыкальной платформе и ценностях — NIGHTVOLT" : "About Our Music Platform & Mission — NIGHTVOLT";
         desc = isRu ? "Познакомьтесь с командой музыкального дистрибьютора NIGHTVOLT, нашей историей, философией и стандартами качественной отгрузки звука." : "Read the core background stories, hardware delivery standards, and artistic commitments of NIGHTVOLT.";
@@ -250,6 +262,9 @@ export default function App() {
       } else if (viewArtists) {
         title = isRu ? "Резиденты и каталог музыкального лейбла — NIGHTVOLT" : "Resident Artists & Catalogue — NIGHTVOLT";
         desc = isRu ? "Каталог независимых артистов мирового уровня, выпускающих свою музыку через NIGHTVOLT. Слушайте наши новинки во всех сервисах." : "Explore independent songwriters, top producers, and official album releases powered by NIGHTVOLT.";
+      } else if (viewFAQ) {
+        title = isRu ? "Справочный центр и FAQ — NIGHTVOLT" : "Help Center & FAQ — NIGHTVOLT";
+        desc = isRu ? "Ответы на все вопросы о дистрибуции музыки, выплатах роялти, авторских правах и метаданных релиза." : "Comprehensive guides and answers to frequently asked questions about music distribution, payouts, copyrights and metadata.";
       } else if (viewTerms) {
         if (activeLegalTab === 'platform' || activeLegalTab === 'terms') {
           title = isRu ? "Пользовательское соглашение платформы — NIGHTVOLT" : "Platform Terms & User Agreement — NIGHTVOLT";
@@ -309,7 +324,7 @@ export default function App() {
     } catch (e) {
       console.error("SEO sync error", e);
     }
-  }, [lang, viewAdmin, viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewPartners, viewArtists]);
+  }, [lang, viewAdmin, viewTerms, activeLegalTab, viewPromoTools, viewAbout, viewVacancies, viewPartners, viewArtists, viewFAQ]);
 
   return (
     <div id="site-root-container" className={`min-h-screen relative overflow-x-hidden transition-colors duration-500 selection:bg-brand-blue selection:text-white ${theme === 'dark' ? 'dark bg-[#0c0d0e] text-neutral-100' : 'bg-[#fafafc] text-neutral-800'}`}>
@@ -449,6 +464,19 @@ export default function App() {
                       onBack={() => navigate('home')} 
                     />
                   </motion.div>
+                ) : viewFAQ ? (
+                  <motion.div
+                    key="faq-subpage"
+                    initial={{ opacity: 0, scale: 0.99, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.99, x: -20 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <FAQPage 
+                      lang={lang} 
+                      onBack={() => navigate('home')} 
+                    />
+                  </motion.div>
                 ) : (
                   <motion.div
                     key="home-mainpage"
@@ -461,7 +489,7 @@ export default function App() {
                     <Hero lang={lang} onScrollTo={handleScrollTo} />
                     
                     {/* Philosophy splits and 80/20 values */}
-                    <Philosophy lang={lang} />
+                    <Philosophy lang={lang} onScrollTo={handleScrollTo} />
                     
                     {/* Expanded 5-card Services and detail grid */}
                     <Services lang={lang} />
@@ -485,7 +513,7 @@ export default function App() {
                     <ContractSubmission lang={lang} />
                     
                     {/* Localized FAQ accordion lists */}
-                    <FAQ lang={lang} />
+                    <FAQ lang={lang} onViewAll={handleNavigateToFAQ} />
                   </motion.div>
                 )}
               </AnimatePresence>

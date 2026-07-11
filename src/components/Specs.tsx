@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { Server, ShieldCheck, Database, Radio, Code2, HeadphonesIcon } from 'lucide-react';
 import { translations } from '../translations';
 
@@ -14,73 +13,69 @@ export default function Specs({ lang }: SpecsProps) {
   const specCards = [
     {
       icon: HeadphonesIcon,
-      tag: isRu ? "ЗАПИСЬ И ЗВУК // SOUND QUALITY" : "SOUND QUALITY // INGEST",
-      title: isRu ? "Высокое Качество Звука" : "High Quality Sound Support",
+      tag: isRu ? "БЕЗУПРЕЧНЫЙ ЗВУК" : "SOUND INTEGRITY",
+      title: isRu ? "Оригинальное качество звука" : "Lossless Audio Delivery",
       desc: isRu 
-        ? "Мы аккуратно переносим ваши оригинальные WAV и FLAC Lossless файлы на стриминги без малейших потерь в качестве и сжатия частот."
-        : "We deliver your original WAV and FLAC Lossless files directly to global stores with zero compression or quality loss."
+        ? "Мы доставляем ваши оригинальные WAV и FLAC файлы на стриминговые платформы без малейшего сжатия частот или изменения динамического диапазона."
+        : "We deliver your original WAV and FLAC files directly to global stores with zero frequency compression or dynamic loss."
     },
     {
       icon: Code2,
-      tag: isRu ? "БЕЗ ОШИБОК // ACCURATE RELEASES" : "ACCURATE DATA // SYSTEM",
-      title: isRu ? "Чистые Метаданные и Карточки" : "Accurate Metadata Profiles",
+      tag: isRu ? "КОРРЕКТНЫЙ ИМПОРТ" : "METADATA VALIDITY",
+      title: isRu ? "Чистая разметка метаданных" : "Accurate Contributor Metadata",
       desc: isRu
-        ? "Полное сохранение данных о релизе. Исключает потерю соавторов или случайное создание пустых дублей карточек артистов на площадках."
-        : "Accurate store delivery. Fully eliminates profile errors, missing co-creators, or duplicate artist pages."
+        ? "Полное сохранение информации о релизе. Предотвращает раздвоение карточек артистов на площадках и гарантирует правильный учет всех авторов."
+        : "Complete store profile mapping. Fully eliminates artist profile duplication, missing co-creators, or database sync errors."
     },
     {
       icon: Radio,
-      tag: isRu ? "ИСКАТЬ В СЕТИ // FINGERPRINTS" : "FINGERPRINTS // CONTENT SECURITY",
-      title: isRu ? "Автоматический Content ID" : "Automated Content ID",
+      tag: isRu ? "АВТОМАТИЗАЦИЯ" : "SYSTEM INGESTION",
+      title: isRu ? "Быстрое присвоение кодов" : "Automated Code Generation",
       desc: isRu
-        ? "Быстрое присвоение кодов ISRC / UPC и передача треков в системы детекции YouTube, VK, TikTok и Instagram Reels для сбора монетизации с видео."
-        : "Quick allocation of ISRC/UPC tags and prompt distribution to YouTube, TikTok, and Instagram Reels copyright databases."
+        ? "Бесплатная генерация и присвоение уникальных кодов ISRC и UPC для каждой аудиозаписи и альбома сразу при создании релиза."
+        : "Complimentary generation and assignment of ISRC and UPC tags for every audio record and release album instantly."
     },
     {
       icon: Database,
-      tag: isRu ? "ЧЕСТНЫЙ СПЛИТ // TRANSFERS" : "FAIR PAYMENTS // TRANSFERS",
-      title: isRu ? "Мгновенные выплаты авторам" : "Instant Payments Dispatch",
+      tag: isRu ? "ПРОЗРАЧНОСТЬ" : "FINANCIAL TRANSPARENCY",
+      title: isRu ? "Прозрачный вывод роялти" : "Transparent Royalty Payouts",
       desc: isRu
-        ? "Доходы делятся автоматически согласно указанным долям релиза (наш сплит 80/20). Каждый соавтор может выводить деньги лично."
-        : "Streaming revenues are automatically divided between team members based on selected rates. Everyone can withdraw their share."
+        ? "Все заработанные роялти начисляются на ваш баланс в полном объеме (80% от сборов) без каких-либо скрытых комиссий или задержек выплат."
+        : "All earned royalties are credited to your balance in full (80% of revenue) without any hidden fees or payout delays."
     },
     {
       icon: Server,
-      tag: isRu ? "БЫСТРАЯ СЪЕМКА // RAPID DELIVERY" : "FAST DELIVERY // UPLOAD",
-      title: isRu ? "Скоростная отгрузка на витрины" : "High-speed Content Delivery",
+      tag: isRu ? "СКОРОСТЬ" : "DIRECT DISTRIBUTION",
+      title: isRu ? "Прямые шлюзы отправки" : "High-Speed Store Delivery",
       desc: isRu
-        ? "Прямые настроенные каналы доставки. Ваша музыка проходит модерацию в среднем за 12-24 часа вместо недель ожидания."
-        : "Direct delivery streams. Your releases pass store review in just 12-24 hours instead of weeks of waiting."
+        ? "Отлаженные технологические мосты с платформами позволяют вашим релизам проходить модерацию в кратчайшие сроки."
+        : "Optimized direct delivery streams ensure your releases pass moderation queues fast instead of weeks of waiting."
     },
     {
       icon: ShieldCheck,
-      tag: isRu ? "ЗАЩИТА ПРАВ // GUARANTEED COPYRIGHT" : "RIGHTS PROTECTION // LEGAL",
-      title: isRu ? "Мониторинг авторских прав" : "Active Copyright Monitoring",
+      tag: isRu ? "ЗАЩИТА" : "CATALOG INTEGRITY",
+      title: isRu ? "Охрана смежных прав" : "Active Master Rights Defense",
       desc: isRu
-        ? "Автоматическое отслеживание несанкционированных перезаливов ваших треков и перенаправление всей прибыли обратно на ваш баланс."
-        : "Background tracking of duplicate uploads across services. Re-routes streaming revenue back to your catalog profile."
+        ? "Препятствование несанкционированному размещению вашей музыки на других аккаунтах и перенаправление монетизации правообладателю."
+        : "Prevention of unauthorized uploads of your music. Automatically safeguards catalog ownership and royalty streams."
     }
   ];
 
   return (
     <section
       id="tech-specs"
-      className="py-24 md:py-32 px-6 md:px-12 bg-transparent relative block border-b border-neutral-200"
+      className="py-24 md:py-32 px-6 md:px-12 bg-transparent relative block border-b border-neutral-200/40 dark:border-neutral-900/40"
     >
-      {/* Decorative vertical lines */}
-      <div className="absolute top-0 bottom-0 left-[8%] w-[1px] bg-neutral-200/5 pointer-events-none hidden md:block" />
-      <div className="absolute top-0 bottom-0 right-[8%] w-[1px] bg-neutral-200/5 pointer-events-none hidden md:block" />
-
       <div className="max-w-[1250px] mx-auto relative z-10">
         
         {/* Module Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16 border-b border-neutral-200/60 dark:border-neutral-900/60 pb-10">
           <div>
-            <div className="flex items-center gap-2 text-[#7e8c9c] font-mono text-[10px] tracking-[0.2em] mb-4 uppercase font-bold">
-              <span className="w-1.5 h-1.5 bg-brand-orange rounded-full animate-pulse" />
+            <div className="flex items-center gap-2 text-[#7e8c9c] font-mono text-[10px] tracking-[0.2em] mb-4 uppercase font-bold text-left">
+              <span className="w-1.5 h-1.5 bg-brand-blue rounded-full" />
               <span>{t.techBadge}</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-tight text-neutral-950 uppercase">
+            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-tight text-neutral-950 dark:text-white uppercase text-left">
               {t.techHeading}
             </h2>
           </div>
@@ -90,55 +85,51 @@ export default function Specs({ lang }: SpecsProps) {
         </div>
 
         {/* Specs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-neutral-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {specCards.map((spec, idx) => {
             const IconComponent = spec.icon;
             return (
-              <motion.div
+              <div
                 key={spec.tag}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-10px" }}
-                transition={{ duration: 0.6, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-white p-8 border border-transparent hover:border-neutral-200 md:p-10 flex flex-col justify-between group hover:bg-[#fafafc] transition-colors duration-300 rounded-2xl md:rounded-none"
+                className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/60 p-6 md:p-8 rounded-3xl flex flex-col justify-between group hover:border-brand-blue/30 dark:hover:border-brand-blue/20 transition-all duration-300 text-left relative overflow-hidden"
               >
+                {/* Subtle hover top bar accent */}
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-blue to-brand-turquoise scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 z-30" />
+
                 <div>
                   {/* Header Tag */}
-                  <div className="flex justify-between items-start mb-8">
-                    <span className="font-mono text-[9px] tracking-widest text-[#7e8c9c] font-bold group-hover:text-neutral-800 uppercase">
+                  <div className="flex justify-between items-center mb-6">
+                    <span className="font-mono text-[9px] tracking-widest text-[#7e8c9c] font-bold uppercase">
                       {spec.tag}
                     </span>
-                    <div className="w-9 h-9 rounded-lg bg-neutral-50 border border-neutral-200 flex items-center justify-center transition-all duration-300 group-hover:bg-brand-blue text-brand-blue group-hover:text-white">
-                      <IconComponent className="w-5 h-5 transition-colors duration-300" />
+                    <div className="w-9 h-9 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-850 flex items-center justify-center transition-all duration-300 group-hover:bg-brand-blue text-brand-blue group-hover:text-white">
+                      <IconComponent className="w-4 h-4 transition-colors duration-300" />
                     </div>
                   </div>
 
-                <h3 className="font-display text-base font-black text-neutral-950 uppercase tracking-wide">
-                  {spec.title}
-                </h3>
-                
-                <p className="text-xs md:text-sm text-neutral-500 font-light mt-4 leading-relaxed">
-                  {spec.desc}
-                </p>
+                  <h3 className="font-display text-base font-black text-neutral-950 dark:text-neutral-50 uppercase tracking-wide">
+                    {spec.title}
+                  </h3>
+                  
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-normal mt-4 leading-relaxed">
+                    {spec.desc}
+                  </p>
+                </div>
               </div>
+            );
+          })}
+        </div>
 
-              {/* Minimal Bottom border transition with orange-red accent */}
-              <div className="w-0 group-hover:w-full h-[1.5px] bg-brand-orange transition-all duration-500 mt-8" />
-            </motion.div>
-          );
-        })}
-      </div>
-
-        {/* Simplified technology verification banner */}
-        <div className="mt-16 bg-[#fafafc] border border-neutral-200 p-6 md:p-8 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-3 h-3 rounded-full bg-brand-orange animate-pulse shrink-0" />
-            <p className="text-xs md:text-sm text-neutral-600 font-light leading-relaxed">
+        {/* Clean Technology Verification Banner */}
+        <div className="mt-12 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/60 p-6 md:p-8 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm">
+          <div className="flex items-center gap-4 text-left">
+            <div className="w-2.5 h-2.5 rounded-full bg-brand-blue flex-shrink-0" />
+            <p className="text-xs md:text-sm text-neutral-600 dark:text-neutral-400 font-normal leading-relaxed max-w-2xl">
               {t.techSecureDesc}
             </p>
           </div>
-          <div className="text-[10px] font-mono tracking-widest text-[#7e8c9c] font-bold uppercase whitespace-nowrap">
-            {isRu ? 'СТАТУС СЕРВИСА: РАБОТАЕТ СТАБИЛЬНО' : 'PLATFORM STATUS: FULLY ONLINE'}
+          <div className="text-[9px] font-mono tracking-widest text-[#7e8c9c] font-bold uppercase whitespace-nowrap bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-850 px-3 py-1.5 rounded-lg">
+            {isRu ? 'СТАНДАРТ ТЕХНОЛОГИЙ' : 'TECHNOLOGY INTEGRITY'}
           </div>
         </div>
 

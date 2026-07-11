@@ -192,13 +192,15 @@ export default function Navbar({ lang, onToggleLang, theme, onToggleTheme, onScr
           </div>
 
           {/* Core CTA */}
-          <button
-            onClick={() => onScrollTo('#submit-demo')}
+          <a
+            href="https://account.nightvolt.ru/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-4.5 py-2 md:px-5 md:py-2.5 bg-brand-blue text-white hover:bg-neutral-900 dark:hover:bg-white dark:hover:text-neutral-950 rounded-full text-[11px] font-mono font-bold tracking-widest transition-all duration-300 active:scale-97 cursor-pointer hover:shadow-lg hover:shadow-brand-blue/15 hover:-translate-y-0.5 flex items-center gap-1.5 group font-bold"
           >
             <ArrowRight className="w-3 h-3 text-white group-hover:translate-x-0.5 transition-transform" />
-            <span>{t.sendSingle.toUpperCase()}</span>
-          </button>
+            <span>{isRu ? 'ВОЙТИ' : 'LOGIN'}</span>
+          </a>
         </div>
       </div>
     </header>

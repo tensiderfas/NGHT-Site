@@ -10,9 +10,9 @@
   
   --color-brand-black: #1e293b;
   --color-brand-dark: #334155;
-  --color-brand-blue: #e1222e;
-  --color-brand-turquoise: #ff4d5a;
-  --color-brand-orange: #ef3340;
+  --color-brand-blue: #0052ff;
+  --color-brand-turquoise: #00d2ff;
+  --color-brand-orange: #0066ff;
   --color-brand-light: #ffffff;
   --color-brand-muted: #7e8c9c;
 }
@@ -52,7 +52,7 @@
 /* Drag-and-drop / pointer cursor support */
 .cursor-pointer-hover {
   transform: scale(1.6);
-  background-color: rgba(225, 34, 46, 0.08);
+  background-color: rgba(0, 82, 255, 0.08);
   border-color: var(--color-brand-turquoise) !important;
 }
 
@@ -174,15 +174,15 @@
 @keyframes drawStroke {
   0% {
     stroke-dashoffset: 1000;
-    fill: rgba(225, 34, 46, 0);
+    fill: rgba(0, 82, 255, 0);
   }
   75% {
     stroke-dashoffset: 0;
-    fill: rgba(225, 34, 46, 0);
+    fill: rgba(0, 82, 255, 0);
   }
   100% {
     stroke-dashoffset: 0;
-    fill: rgba(239, 51, 64, 1);
+    fill: rgba(0, 102, 255, 1);
   }
 }
 

@@ -1712,12 +1712,12 @@ export default function AdminPanel({ lang, onClose }: AdminPanelProps) {
               </form>
             </div>
 
-            {/* Right Side: Active Database Artists */}
+            {/* Right Side: Database Artists */}
             <div className="col-span-12 lg:col-span-7 bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm space-y-4">
               <div className="border-b border-neutral-100 pb-3 flex items-center justify-between">
                 <span className="font-mono text-[10px] tracking-widest text-[#7e8c9c] font-black uppercase flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-[#e1222e]" />
-                  {isRu ? "АКТИВНЫЕ АРТИСТЫ В БД" : "DATABASE ARTISTS LOG"}
+                  {isRu ? "АРТИСТЫ В БАЗЕ ДАННЫХ" : "DATABASE ARTISTS LOG"}
                 </span>
                 <button 
                   onClick={fetchArtists}

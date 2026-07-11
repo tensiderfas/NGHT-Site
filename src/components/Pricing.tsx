@@ -103,6 +103,9 @@ export default function Pricing({ lang }: PricingProps) {
   const currentPrice = pricingData[currency];
 
   const getFormattedPrice = (amount: number, curr: Currency) => {
+    if (amount === 0) {
+      return isRu ? "Бесплатно" : "FREE";
+    }
     const data = pricingData[curr];
     const rounded = parseFloat(amount.toFixed(2));
     if (data.prefix) {
@@ -476,13 +479,23 @@ export default function Pricing({ lang }: PricingProps) {
               </div>
             ) : (
               dbExtras.map((es) => {
-                const formattedPrice = currency === 'RUB' 
-                  ? `${es.priceRub} ₽` 
+                const currentVal = currency === 'RUB' 
+                  ? Number(es.priceRub ?? 0) 
                   : currency === 'KZT' 
-                    ? `${es.priceKzt} ₸` 
+                    ? Number(es.priceKzt ?? 0) 
                     : currency === 'USD' 
-                      ? `$${es.priceUsd}` 
-                      : `€${es.priceEur}`;
+                      ? Number(es.priceUsd ?? 0) 
+                      : Number(es.priceEur ?? 0);
+
+                const formattedPrice = currentVal === 0 
+                  ? (isRu ? "Бесплатно" : "FREE")
+                  : currency === 'RUB' 
+                    ? `${es.priceRub} ₽` 
+                    : currency === 'KZT' 
+                      ? `${es.priceKzt} ₸` 
+                      : currency === 'USD' 
+                        ? `$${es.priceUsd}` 
+                        : `€${es.priceEur}`;
 
                 return (
                   <div key={es.id} className="p-5 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200/40 dark:border-neutral-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-brand-blue/30 dark:hover:border-brand-blue/20 transition-all duration-300 text-left">

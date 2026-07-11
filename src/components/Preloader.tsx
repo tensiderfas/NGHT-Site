@@ -35,51 +35,59 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   return (
     <motion.div
       id="preloader-container"
-      className="fixed inset-0 bg-white text-[#0a0c10] z-50 flex flex-col items-center justify-center select-none"
+      className="fixed inset-0 bg-[#0b0c0e] text-[#f4f4f5] z-50 flex flex-col items-center justify-center select-none"
       initial={{ opacity: 1 }}
       exit={{ 
         opacity: 0,
-        scale: 0.98,
         transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
       }}
     >
-      <div className="flex flex-col items-center max-w-xl px-6">
-        {/* Centered Hype-style brand logo with bold italic fonts - sized larger as requested */}
-        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6">
-          <span 
-            className="font-display font-black text-3xl sm:text-4xl md:text-5xl tracking-tighter italic uppercase text-neutral-950 select-none"
-            style={{ fontStyle: 'italic' }}
-          >
-            NIGHT
-          </span>
-          
-          {/* Custom tilted sharp brand lightning bolt matching our official design */}
-          <div className="text-3xl sm:text-4xl md:text-5xl w-[0.85em] h-[0.85em] flex items-center justify-center mt-0.5">
-            <Logo 
-              className="w-full h-full text-[#e1222e]"
-              fill="#e1222e"
-              stroke="none"
-              viewBox="25 25 50 50"
+      <div className="flex flex-col items-center">
+        {/* Breathing minimalist logo container */}
+        <motion.div
+          animate={{ 
+            scale: [0.97, 1.03, 0.97],
+            opacity: [0.8, 1, 0.8]
+          }}
+          transition={{ 
+            repeat: Infinity, 
+            duration: 2.5, 
+            ease: "easeInOut" 
+          }}
+          className="w-12 h-12 mb-8 flex items-center justify-center"
+        >
+          <Logo 
+            className="w-full h-full text-brand-blue"
+            fill="currentColor"
+            stroke="none"
+            viewBox="25 25 50 50"
+          />
+        </motion.div>
+
+        {/* Brand Name */}
+        <div className="flex items-center gap-1.5 mb-10 tracking-[0.2em] font-display font-bold text-xs uppercase text-white/90">
+          <span>NIGHT</span>
+          <span className="text-brand-blue">VOLT</span>
+        </div>
+
+        {/* Minimal progress tracker */}
+        <div className="flex flex-col items-center gap-3">
+          {/* Extremely thin progress bar */}
+          <div className="w-32 h-[1px] bg-white/10 rounded-full overflow-hidden relative">
+            <motion.div 
+              className="h-full bg-brand-blue"
+              style={{ width: `${progress}%` }}
+              transition={{ ease: "easeOut" }}
             />
           </div>
           
-          <span 
-            className="font-display font-black text-3xl sm:text-4xl md:text-5xl tracking-tighter italic uppercase text-neutral-950 select-none"
-            style={{ fontStyle: 'italic' }}
-          >
-            VOLT
+          {/* Tiny percent indicator */}
+          <span className="font-mono text-[10px] text-neutral-500 tracking-widest">
+            {progress}%
           </span>
-        </div>
-
-        {/* Customized horizontal crimson red loading progress bar - matching larger typography */}
-        <div className="w-[140px] sm:w-[180px] md:w-[220px] h-[3px] bg-neutral-100 rounded-full overflow-hidden">
-          <motion.div 
-            className="h-full bg-[#e1222e]"
-            style={{ width: `${progress}%` }}
-            transition={{ ease: "easeOut" }}
-          />
         </div>
       </div>
     </motion.div>
   );
 }
+
